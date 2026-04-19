@@ -23,6 +23,7 @@ export interface IpcDeps {
     registeredJids: Set<string>,
   ) => void;
   onTasksChanged: () => void;
+  storeResumeContext: (chatJid: string, context: string) => void;
 }
 
 let ipcWatcherRunning = false;
@@ -90,6 +91,29 @@ export function startIpcWatcher(deps: IpcDeps): void {
                   logger.warn(
                     { chatJid: data.chatJid, sourceGroup },
                     'Unauthorized IPC message attempt blocked',
+                  );
+                }
+              } else if (
+                data.type === 'ask_user' &&
+                data.chat_jid &&
+                data.question &&
+                data.resume_context
+              ) {
+                const targetGroup = registeredGroups[data.chat_jid];
+                if (
+                  isMain ||
+                  (targetGroup && targetGroup.folder === sourceGroup)
+                ) {
+                  deps.storeResumeContext(data.chat_jid, data.resume_context);
+                  await deps.sendMessage(data.chat_jid, data.question);
+                  logger.info(
+                    { chatJid: data.chat_jid, sourceGroup },
+                    'ask_user IPC processed',
+                  );
+                } else {
+                  logger.warn(
+                    { chatJid: data.chat_jid, sourceGroup },
+                    'Unauthorized ask_user IPC attempt blocked',
                   );
                 }
               }

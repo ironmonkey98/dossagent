@@ -50,6 +50,7 @@ import { GroupQueue } from './group-queue.js';
 import { resolveGroupFolderPath } from './group-folder.js';
 import { startIpcWatcher } from './ipc.js';
 import { findChannel, formatMessages, formatOutbound } from './router.js';
+import { ApiChannel, API_JID, API_GROUP_FOLDER } from './api-server.js';
 import {
   restoreRemoteControl,
   startRemoteControl,
@@ -74,6 +75,9 @@ let sessions: Record<string, string> = {};
 let registeredGroups: Record<string, RegisteredGroup> = {};
 let lastAgentTimestamp: Record<string, string> = {};
 let messageLoopRunning = false;
+
+// 断点交互：存储挂起任务的 resume_context，key 为 chat_jid，进程重启后清空
+const resumeContextMap = new Map<string, string>();
 
 const channels: Channel[] = [];
 const queue = new GroupQueue();
@@ -251,7 +255,15 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
     if (!hasTrigger) return true;
   }
 
-  const prompt = formatMessages(missedMessages, TIMEZONE);
+  let prompt = formatMessages(missedMessages, TIMEZONE);
+
+  // 断点交互：若有挂起的 resume_context，前置注入后清除
+  const resumeCtx = resumeContextMap.get(chatJid);
+  if (resumeCtx) {
+    resumeContextMap.delete(chatJid);
+    prompt = `[任务断点恢复]\n${resumeCtx}\n\n[用户回复]\n${prompt}`;
+    logger.info({ chatJid }, 'Resume context injected into prompt');
+  }
 
   // Advance cursor so the piping path in startMessageLoop won't re-fetch
   // these messages. Save the old cursor so we can roll back on error.
@@ -303,6 +315,8 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 
     if (result.status === 'success') {
       queue.notifyIdle(chatJid);
+      // For API channel: resolve the pending HTTP request immediately
+      if (channel instanceof ApiChannel) channel.notifyDone();
     }
 
     if (result.status === 'error') {
@@ -321,6 +335,7 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
         { group: group.name },
         'Agent error after output was sent, skipping cursor rollback to prevent duplicates',
       );
+      if (channel instanceof ApiChannel) channel.notifyDone();
       return true;
     }
     // Roll back cursor so retries can re-process these messages
@@ -330,9 +345,11 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
       { group: group.name },
       'Agent error, rolled back message cursor for retry',
     );
+    if (channel instanceof ApiChannel) channel.notifyDone();
     return false;
   }
 
+  if (channel instanceof ApiChannel) channel.notifyDone();
   return true;
 }
 
@@ -690,9 +707,27 @@ async function main(): Promise<void> {
     channels.push(channel);
     await channel.connect();
   }
+  // The API channel (always registered) counts; only fatal if truly empty
   if (channels.length === 0) {
     logger.fatal('No channels connected');
     process.exit(1);
+  }
+
+  // Register the API virtual group and start the HTTP server
+  const apiChannel = channels.find((ch) => ch instanceof ApiChannel) as
+    | ApiChannel
+    | undefined;
+  if (apiChannel) {
+    if (!registeredGroups[API_JID]) {
+      registerGroup(API_JID, {
+        name: 'API',
+        folder: API_GROUP_FOLDER,
+        trigger: '',
+        requiresTrigger: false,
+        added_at: new Date().toISOString(),
+      });
+    }
+    apiChannel.startHttpServer();
   }
 
   // Start subsystems (independently of connection handler)
@@ -745,6 +780,10 @@ async function main(): Promise<void> {
       for (const group of Object.values(registeredGroups)) {
         writeTasksSnapshot(group.folder, group.isMain === true, taskRows);
       }
+    },
+    storeResumeContext: (chatJid: string, context: string) => {
+      resumeContextMap.set(chatJid, context);
+      logger.info({ chatJid }, 'Resume context stored for breakpoint interaction');
     },
   });
   startSessionCleanup();
