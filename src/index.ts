@@ -783,7 +783,10 @@ async function main(): Promise<void> {
     },
     storeResumeContext: (chatJid: string, context: string) => {
       resumeContextMap.set(chatJid, context);
-      logger.info({ chatJid }, 'Resume context stored for breakpoint interaction');
+      logger.info(
+        { chatJid },
+        'Resume context stored for breakpoint interaction',
+      );
     },
   });
   startSessionCleanup();

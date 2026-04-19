@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Andy</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green: #22c55e;
+  --green-dark: #16a34a;
+  --bg: #f0f0f0;
+  --bubble-bot: #ffffff;
+  --bubble-user: #22c55e;
+  --text: #222;
+  --text-muted: #999;
+  --input-bg: #f5f5f5;
+  --border: #e0e0e0;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Full-screen chat layout */
+.chat-app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+/* Header */
+.header {
+  background: #fff;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.avatar {
+  width: 38px; height: 38px;
+  background: var(--green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 17px; font-weight: 700;
+  flex-shrink: 0;
+}
+.header-name { font-size: 16px; font-weight: 600; color: #111; }
+.header-status { font-size: 12px; color: var(--green); margin-top: 1px; }
+.status-dot {
+  width: 9px; height: 9px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Messages scroll area */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Message row */
+.msg { display: flex; flex-direction: column; max-width: 78%; }
+.msg.bot { align-self: flex-start; }
+.msg.user { align-self: flex-end; }
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.msg.bot .bubble {
+  background: var(--bubble-bot);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.msg.user .bubble {
+  background: var(--bubble-user);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  padding: 0 4px;
+}
+.msg.user .time { text-align: right; }
+
+/* Typing dots */
+.typing-bubble {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 13px 16px;
+}
+.dot {
+  width: 7px; height: 7px;
+  background: #bbb;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+/* Input area */
+.input-area {
+  background: #fff;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.input-box {
+  flex: 1;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 10px 16px;
+  font-size: 15px;
+  color: var(--text);
+  resize: none;
+  outline: none;
+  max-height: 120px;
+  font-family: inherit;
+  line-height: 1.4;
+  transition: border-color 0.15s;
+}
+.input-box:focus { border-color: var(--green); }
+.send-btn {
+  width: 42px; height: 42px;
+  background: var(--green);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  border: none;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.send-btn:active { background: var(--green-dark); transform: scale(0.93); }
+.send-btn svg { width: 18px; height: 18px; fill: #fff; }
+.send-btn:disabled { background: #ccc; cursor: default; }
+</style>
+</head>
+<body>
+
+<div class="chat-app">
+  <div class="header">
+    <div class="avatar">A</div>
+    <div>
+      <div class="header-name">Andy</div>
+      <div class="header-status" id="status-text">在线</div>
+    </div>
+    <div class="status-dot" id="status-dot"></div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="msg bot">
+      <div class="bubble">你好！我是 Andy，有什么可以帮你的？</div>
+      <span class="time">now</span>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <textarea
+      id="input"
+      class="input-box"
+      placeholder="输入消息..."
+      rows="1"
+    ></textarea>
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// API endpoint — uses same hostname, port 3080
+const API_URL = `http://${location.hostname}:3080/api/message`;
+
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('send-btn');
+const statusText = document.getElementById('status-text');
+
+let isWaiting = false;
+
+// Auto-resize textarea
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+});
+
+// Send on Enter (Shift+Enter = newline)
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+function now() {
+  return new Date().toLocaleTimeString('zh', { hour: '2-digit', minute: '2-digit' });
+}
+
+function appendMessage(role, text) {
+  const msg = document.createElement('div');
+  msg.className = `msg ${role}`;
+  msg.innerHTML = `
+    <div class="bubble">${escapeHtml(text)}</div>
+    <span class="time">${now()}</span>
+  `;
+  messagesEl.appendChild(msg);
+  scrollToBottom();
+  return msg;
+}
+
+function showTyping() {
+  const msg = document.createElement('div');
+  msg.className = 'msg bot';
+  msg.id = 'typing';
+  msg.innerHTML = `<div class="bubble typing-bubble">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>`;
+  messagesEl.appendChild(msg);
+  scrollToBottom();
+}
+
+function hideTyping() {
+  document.getElementById('typing')?.remove();
+}
+
+function scrollToBottom() {
+  messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function setWaiting(val) {
+  isWaiting = val;
+  sendBtn.disabled = val;
+  inputEl.disabled = val;
+  statusText.textContent = val ? '正在回复...' : '在线';
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text || isWaiting) return;
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  appendMessage('user', text);
+  setWaiting(true);
+  showTyping();
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text }),
+    });
+    const data = await res.json();
+    hideTyping();
+    appendMessage('bot', data.response || '（无响应）');
+  } catch (err) {
+    hideTyping();
+    appendMessage('bot', '连接失败，请检查 NanoClaw 是否运行。');
+  } finally {
+    setWaiting(false);
+    inputEl.focus();
+  }
+}
+</script>
+</body>
+</html>

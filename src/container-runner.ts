@@ -27,6 +27,7 @@ import {
 } from './container-runtime.js';
 import { OneCLI } from '@onecli-sh/sdk';
 import { validateAdditionalMounts } from './mount-security.js';
+import { readEnvFile } from './env.js';
 import { RegisteredGroup } from './types.js';
 
 const onecli = new OneCLI({ url: ONECLI_URL, apiKey: ONECLI_API_KEY });
@@ -252,6 +253,19 @@ async function buildContainerArgs(
 
   // Pass host timezone so container's local time matches the user's
   args.push('-e', `TZ=${TIMEZONE}`);
+
+  // Anthropic-compatible GLM endpoint — lets Claude Code use GLM instead of Anthropic
+  const llmEnv = readEnvFile(['ANTHROPIC_BASE_URL', 'ANTHROPIC_API_KEY']);
+  const anthropicBaseUrl =
+    process.env.ANTHROPIC_BASE_URL || llmEnv.ANTHROPIC_BASE_URL;
+  const anthropicApiKey =
+    process.env.ANTHROPIC_API_KEY || llmEnv.ANTHROPIC_API_KEY;
+  if (anthropicBaseUrl)
+    args.push('-e', `ANTHROPIC_BASE_URL=${anthropicBaseUrl}`);
+  if (anthropicApiKey) {
+    args.push('-e', `ANTHROPIC_API_KEY=${anthropicApiKey}`);
+    args.push('-e', `ANTHROPIC_AUTH_TOKEN=${anthropicApiKey}`);
+  }
 
   // OneCLI gateway handles credential injection — containers never see real secrets.
   // The gateway intercepts HTTPS traffic and injects API keys or OAuth tokens.

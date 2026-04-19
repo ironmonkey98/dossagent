@@ -39,3 +39,4 @@ groups/dossagent/*
 .nanoclaw/
 
 agents-sdk-docs
+.superpowers/
