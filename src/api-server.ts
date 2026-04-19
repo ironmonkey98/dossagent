@@ -95,6 +95,7 @@ interface PendingRequest {
   chunks: string[];
   resolve: (chunks: string[]) => void;
   timer: ReturnType<typeof setTimeout>;
+  onChunk?: (text: string) => void;
 }
 
 export class ApiChannel implements Channel {
@@ -136,6 +137,7 @@ export class ApiChannel implements Channel {
   async sendMessage(_jid: string, text: string): Promise<void> {
     if (this.queue.length > 0) {
       this.queue[0].chunks.push(text);
+      this.queue[0].onChunk?.(text);
     }
   }
 
@@ -148,8 +150,8 @@ export class ApiChannel implements Channel {
     }
   }
 
-  /** Injects a message and waits for the agent response */
-  async processRequest(content: string): Promise<string[]> {
+  /** Injects a message and waits for the agent response; onChunk called for each streamed chunk */
+  async processRequest(content: string, onChunk?: (text: string) => void): Promise<string[]> {
     return new Promise((resolve) => {
       const timer = setTimeout(() => {
         const idx = this.queue.findIndex((r) => r.resolve === resolve);
@@ -158,7 +160,7 @@ export class ApiChannel implements Channel {
         resolve([]);
       }, REQUEST_TIMEOUT_MS);
 
-      this.queue.push({ chunks: [], resolve, timer });
+      this.queue.push({ chunks: [], resolve, timer, onChunk });
 
       // Ensure chat record exists before storing messages (FK constraint)
       storeChatMetadata(API_JID, new Date().toISOString(), 'API', 'api', false);
@@ -236,6 +238,55 @@ export class ApiChannel implements Channel {
           } catch (err: unknown) {
             logger.error({ err }, 'API handler error');
             send(500, { error: String(err) });
+          }
+        });
+        return;
+      }
+
+      // POST /api/stream  →  SSE: data:{"type":"chunk","text":"..."} / data:{"type":"done"}
+      if (req.method === 'POST' && req.url === '/api/stream') {
+        let body = '';
+        req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+        req.on('end', async () => {
+          try {
+            const data: unknown = JSON.parse(body);
+            if (
+              !data ||
+              typeof data !== 'object' ||
+              !('message' in data) ||
+              typeof (data as Record<string, unknown>).message !== 'string'
+            ) {
+              send(400, { error: '`message` string field required' });
+              return;
+            }
+            const message = (data as { message: string }).message;
+
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+            });
+
+            let closed = false;
+            // 监听 res 而非 req：req.close 在请求 body 读完后立即触发，与客户端断连无关
+            res.on('close', () => { closed = true; });
+
+            res.flushHeaders();  // 立即发送 SSE 头部，避免客户端等待
+
+            const onChunk = (text: string) => {
+              if (!closed) res.write(`data: ${JSON.stringify({ type: 'chunk', text })}\n\n`);
+            };
+
+            await this.processRequest(message, onChunk);
+
+            if (!closed) {
+              res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+              res.end();
+            }
+          } catch (err: unknown) {
+            logger.error({ err }, 'Stream API handler error');
+            if (!res.headersSent) send(500, { error: String(err) });
+            else res.end();
           }
         });
         return;
