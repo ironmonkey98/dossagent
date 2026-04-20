@@ -29,6 +29,7 @@ description: |
 | 关探照灯 | `light --dock <code> --payload 2 --mode 0` |
 | 喊话：请注意安全 | `speaker --dock <code> --payload 3 --text "请注意安全"` |
 | 停止喊话 | `speaker --dock <code> --payload 3 --stop` |
+| 看视频/抓图传/看直播 | `stream --device <droneDeviceCode> --protocol HLS` |
 
 > 负载索引：0=主摄像头，1=副摄像头，2=探照灯，3=喊话器（具体以设备为准）
 
@@ -106,9 +107,37 @@ python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py payload \
   --dock DOCK001 --confirm
 ```
 
-## 获取机场编号
+### 实时视频流（stream）
 
-若不知道 dockCode，先运行 `doss-status` 查询：
+> 需要无人机的 **deviceCode**（非 dockCode），从 `doss-status` 输出中获取
+
 ```bash
+# HLS 流（浏览器可直接播放，推荐）
+python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py stream \
+  --device 1581F8HHX252N00A00DM --protocol HLS
+
+# RTSP 流（VLC 播放）
+python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py stream \
+  --device 1581F8HHX252N00A00DM --protocol RTSP
+
+# 辅码流（低码率）
+python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py stream \
+  --device 1581F8HHX252N00A00DM --protocol HLS --stream-type 2
+```
+
+输出示例：
+```
+✅ 视频流获取成功
+   协议：HLS
+   地址：http://172.16.180.18/hls/gb_play_xxx.m3u8
+   💡 可在浏览器或播放器中打开该地址
+```
+
+## 获取机场/无人机编号
+
+```bash
+# 获取机场 dockCode
 python3 ~/.claude/skills/doss-status/scripts/doss_status.py --type dock
+# 获取无人机 deviceCode（stream 命令需要此值）
+python3 ~/.claude/skills/doss-status/scripts/doss_status.py --type drone
 ```

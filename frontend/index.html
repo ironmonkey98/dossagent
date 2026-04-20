@@ -2,392 +2,312 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Andy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOSS · 智能对话</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
-  --green: #22c55e;
-  --green-dark: #16a34a;
-  --bg: #f0f0f0;
-  --bubble-bot: #ffffff;
-  --bubble-user: #22c55e;
-  --text: #222;
-  --text-muted: #999;
-  --input-bg: #f5f5f5;
-  --border: #e0e0e0;
+  --bg:       #060c14;
+  --accent:   #00c8ff;
+  --green:    #00e87a;
+  --amber:    #ffaa00;
+  --text:     #6ca8c8;
+  --text-hi:  #d0eaf8;
+  --text-lo:  #2e5268;
+  --border:   rgba(0,200,255,0.1);
+  --border-hi:rgba(0,200,255,0.28);
 }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Segoe UI', sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  height: 100%; font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg); color: var(--text-hi);
+  font-size: 13px; -webkit-font-smoothing: antialiased; overflow: hidden;
 }
 
-.chat-app {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  max-width: 480px;
-  margin: 0 auto;
-  background: var(--bg);
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -5%, rgba(0,160,255,0.07) 0%, transparent 65%),
+    linear-gradient(rgba(0,200,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.018) 1px, transparent 1px);
+  background-size: 100% 100%, 48px 48px, 48px 48px;
+  pointer-events: none;
 }
 
-.header {
-  background: #fff;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-.avatar {
-  width: 38px; height: 38px;
-  background: var(--green);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 17px; font-weight: 700;
-  flex-shrink: 0;
-}
-.header-name { font-size: 16px; font-weight: 600; color: #111; }
-.header-status { font-size: 12px; color: var(--green); margin-top: 1px; }
-.status-dot {
-  width: 9px; height: 9px;
-  background: var(--green);
-  border-radius: 50%;
-  margin-left: auto;
-  flex-shrink: 0;
+/* ── Full-screen chat layout ── */
+.chat {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100vh;
+  background: rgba(9,18,30,0.88);
+  backdrop-filter: blur(10px);
 }
 
+/* ── Corner brackets ── */
+.chat::before, .chat::after,
+.corner-tr, .corner-bl {
+  content: '';
+  position: fixed; z-index: 20; pointer-events: none;
+  width: 22px; height: 22px;
+}
+.chat::before { top: 0; left: 0; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); opacity: .6; }
+.chat::after  { bottom: 0; right: 0; border-bottom: 2px solid var(--accent); border-right: 2px solid var(--accent); opacity: .6; }
+.corner-tr    { top: 0; right: 0; border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); opacity: .6; }
+.corner-bl    { bottom: 0; left: 0; border-bottom: 2px solid var(--accent); border-left: 2px solid var(--accent); opacity: .6; }
+
+/* ── Messages ── */
 .messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 14px 12px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  -webkit-overflow-scrolling: touch;
+  flex: 1; overflow-y: auto;
+  padding: 22px 26px; display: flex; flex-direction: column; gap: 18px;
+}
+.messages::-webkit-scrollbar { width: 3px; }
+.messages::-webkit-scrollbar-thumb { background: rgba(0,200,255,0.18); border-radius: 2px; }
+.messages::-webkit-scrollbar-track { background: transparent; }
+
+.msg-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  animation: msgIn 0.25s cubic-bezier(0.22,1,0.36,1);
+}
+.msg-row.user { flex-direction: row-reverse; }
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.msg { display: flex; flex-direction: column; max-width: 78%; }
-.msg.bot { align-self: flex-start; }
-.msg.user { align-self: flex-end; }
+.avatar {
+  width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.06em;
+}
+.avatar.bot  { background: rgba(0,200,255,0.08); border: 1px solid rgba(0,200,255,0.22); color: var(--accent); }
+.avatar.user { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text); font-size: 9px; }
+
+.msg-body { display: flex; flex-direction: column; max-width: 76%; }
+.msg-row.user .msg-body { align-items: flex-end; }
 
 .bubble {
-  padding: 10px 14px;
-  border-radius: 18px;
-  font-size: 15px;
-  line-height: 1.55;
-  word-break: break-word;
-  white-space: pre-wrap;
+  padding: 10px 15px; font-size: 13px; line-height: 1.75;
+  word-break: break-word; white-space: pre-wrap;
+  border-radius: 3px; position: relative;
 }
-.msg.bot .bubble {
-  background: var(--bubble-bot);
-  color: var(--text);
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-.msg.user .bubble {
-  background: var(--bubble-user);
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
+.bot  .bubble { background: rgba(0,200,255,0.04); border: 1px solid rgba(0,200,255,0.1); color: var(--text-hi); border-top-left-radius: 1px; }
+.user .bubble { background: rgba(0,200,255,0.09); border: 1px solid rgba(0,200,255,0.18); color: var(--text-hi); border-top-right-radius: 1px; }
 
-/* 流式光标 */
 .bubble[data-streaming]::after {
-  content: '▋';
-  animation: blink 0.7s infinite;
-  color: var(--green);
-  font-size: 13px;
+  content: '█'; animation: cur 0.65s step-end infinite;
+  color: var(--accent); font-size: 11px; margin-left: 2px;
 }
-@keyframes blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
+@keyframes cur { 0%,100%{opacity:.9} 50%{opacity:0} }
 
-.time {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 3px;
-  padding: 0 4px;
-}
-.msg.user .time { text-align: right; }
+.msg-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-lo); margin-top: 5px; letter-spacing: 0.04em; }
 
-/* 思考过程折叠区 */
-.thinking {
-  margin-top: 4px;
-  max-width: 260px;
-}
+/* Thinking */
+.thinking { margin-top: 6px; }
 .thinking summary {
-  cursor: pointer;
-  font-size: 11px;
-  color: var(--green-dark);
-  padding: 2px 4px;
-  user-select: none;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  cursor: pointer; list-style: none;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--accent); opacity: .5; padding: 2px 4px;
+  display: flex; align-items: center; gap: 5px;
+  text-transform: uppercase; letter-spacing: .08em; user-select: none;
+  transition: opacity .15s;
 }
-.thinking summary::before {
-  content: '▶';
-  font-size: 9px;
-  transition: transform 0.2s;
-}
+.thinking summary:hover { opacity: .85; }
+.thinking summary::-webkit-details-marker { display: none; }
+.thinking summary::before { content:'▶'; font-size:7px; transition: transform .2s; }
 .thinking[open] summary::before { transform: rotate(90deg); }
-.thinking-body {
-  margin-top: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+.thinking-body { margin-top: 4px; display: flex; flex-direction: column; gap: 3px; }
 .thought {
-  background: #f5f5f5;
-  border-left: 2px solid var(--border);
-  border-radius: 0 6px 6px 0;
-  padding: 5px 8px;
-  font-size: 12px;
-  color: #555;
-  white-space: pre-wrap;
-  word-break: break-word;
+  background: rgba(0,0,0,.3); border-left: 1px solid rgba(0,200,255,.18);
+  padding: 6px 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  color: var(--text); opacity: .75; white-space: pre-wrap; word-break: break-word;
 }
-.thought-idx {
-  font-size: 10px;
-  color: var(--text-muted);
-  font-weight: 600;
-  margin-right: 4px;
-}
+.thought-idx { color: var(--accent); opacity: .45; margin-right: 6px; }
 
-/* Typing dots */
-.typing-bubble {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  padding: 13px 16px;
-}
-.dot {
-  width: 7px; height: 7px;
-  background: #bbb;
-  border-radius: 50%;
-  animation: bounce 1.2s infinite ease-in-out;
-}
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
-  30% { transform: translateY(-5px); opacity: 1; }
-}
+/* Typing */
+.typing-bubble { display: flex; gap: 5px; align-items: center; padding: 12px 15px; }
+.dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; opacity: .35; animation: wave 1.3s ease-in-out infinite; }
+.dot:nth-child(2) { animation-delay: .15s; }
+.dot:nth-child(3) { animation-delay: .3s; }
+@keyframes wave { 0%,60%,100%{transform:translateY(0);opacity:.35} 30%{transform:translateY(-5px);opacity:.9} }
 
+/* ── Input area ── */
 .input-area {
-  background: #fff;
-  padding: 10px 12px;
   border-top: 1px solid var(--border);
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
+  background: rgba(0,200,255,0.02);
+  padding: 12px 26px 14px; flex-shrink: 0;
 }
+
+.cmd-row { display: flex; align-items: flex-end; gap: 10px; }
+
+.cmd-gt { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--accent); opacity: .6; padding-bottom: 7px; flex-shrink: 0; }
+
+.input-wrap { flex: 1; }
+
 .input-box {
-  flex: 1;
-  background: var(--input-bg);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 10px 16px;
-  font-size: 15px;
-  color: var(--text);
-  resize: none;
-  outline: none;
-  max-height: 120px;
-  font-family: inherit;
-  line-height: 1.4;
-  transition: border-color 0.15s;
+  width: 100%; background: transparent;
+  border: none; border-bottom: 1px solid rgba(0,200,255,0.18);
+  padding: 6px 0 8px; font-size: 13px; line-height: 1.6;
+  color: var(--text-hi); font-family: 'Noto Sans SC', 'IBM Plex Mono', monospace;
+  resize: none; outline: none; max-height: 96px;
+  caret-color: var(--accent); transition: border-color .2s;
 }
-.input-box:focus { border-color: var(--green); }
+.input-box:focus { border-bottom-color: var(--accent); }
+.input-box::placeholder { color: var(--text-lo); font-size: 12px; }
+.input-box:disabled { opacity: .35; cursor: not-allowed; }
+
 .send-btn {
-  width: 42px; height: 42px;
-  background: var(--green);
-  border-radius: 50%;
+  width: 34px; height: 32px;
+  background: rgba(0,200,255,0.08); border: 1px solid rgba(0,200,255,0.2);
+  border-radius: 3px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  border: none;
-  transition: background 0.15s, transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
+  color: var(--accent); flex-shrink: 0;
+  transition: background .15s, border-color .15s, transform .1s;
 }
-.send-btn:active { background: var(--green-dark); transform: scale(0.93); }
-.send-btn svg { width: 18px; height: 18px; fill: #fff; }
-.send-btn:disabled { background: #ccc; cursor: default; }
+.send-btn:hover:not(:disabled) { background: rgba(0,200,255,0.15); border-color: rgba(0,200,255,0.38); }
+.send-btn:active:not(:disabled) { transform: scale(0.91); }
+.send-btn:disabled { opacity: .25; cursor: not-allowed; }
+.send-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+.input-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.hint-row { display: flex; align-items: center; gap: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-lo); letter-spacing: .04em; }
+.kbd { display: inline-block; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 2px; padding: 1px 5px; font-size: 9px; color: var(--text); font-family: inherit; }
+.input-status { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--accent); opacity: .3; letter-spacing: .12em; text-transform: uppercase; }
 </style>
 </head>
 <body>
 
-<div class="chat-app">
-  <div class="header">
-    <div class="avatar">A</div>
-    <div>
-      <div class="header-name">Andy</div>
-      <div class="header-status" id="status-text">在线</div>
-    </div>
-    <div class="status-dot" id="status-dot"></div>
-  </div>
+<div class="chat">
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
 
+  <!-- Messages -->
   <div class="messages" id="messages">
-    <div class="msg bot">
-      <div class="bubble">你好！我是 Andy，有什么可以帮你的？</div>
-      <span class="time">now</span>
+    <div class="msg-row bot">
+      <div class="avatar bot">D</div>
+      <div class="msg-body">
+        <div class="bubble">系统就绪。我是 DOSS，低空飞行系统智能指控助手。
+
+可执行以下操作：
+• 查询无人机与机场实时状态
+• 控制无人机飞行（起飞 / 导航 / 返航）
+• 获取实时视频流与拍照分析
+• 管理飞行任务与查看数据报告
+• 处理告警与安全事件
+
+请下达指令。</div>
+        <span class="msg-time" id="init-time"></span>
+      </div>
     </div>
   </div>
 
+  <!-- Input -->
   <div class="input-area">
-    <textarea
-      id="input"
-      class="input-box"
-      placeholder="输入消息..."
-      rows="1"
-    ></textarea>
-    <button class="send-btn" id="send-btn" onclick="sendMessage()">
-      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-    </button>
+    <div class="cmd-row">
+      <span class="cmd-gt">&gt;</span>
+      <div class="input-wrap">
+        <textarea id="input" class="input-box" placeholder="输入指令或问题，例如：查询软三A01机场状态" rows="1"></textarea>
+      </div>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <div class="input-meta">
+      <div class="hint-row">
+        <span><span class="kbd">Enter</span> 发送</span>
+        <span><span class="kbd">Shift</span>+<span class="kbd">Enter</span> 换行</span>
+      </div>
+      <div class="input-status" id="input-status">STANDBY</div>
+    </div>
   </div>
 </div>
 
 <script>
 const STREAM_URL = `http://${location.hostname}:3080/api/stream`;
-
-const messagesEl = document.getElementById('messages');
+const msgEl   = document.getElementById('messages');
 const inputEl = document.getElementById('input');
 const sendBtn = document.getElementById('send-btn');
-const statusText = document.getElementById('status-text');
-
+const statusEl= document.getElementById('input-status');
 let isWaiting = false;
+
+function fmtTime() {
+  return new Date().toLocaleTimeString('zh', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+}
+document.getElementById('init-time').textContent = fmtTime();
 
 inputEl.addEventListener('input', () => {
   inputEl.style.height = 'auto';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 96) + 'px';
 });
-
 inputEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
 
-function now() {
-  return new Date().toLocaleTimeString('zh', { hour: '2-digit', minute: '2-digit' });
-}
+function scrollEnd() { msgEl.scrollTo({ top: msgEl.scrollHeight, behavior: 'smooth' }); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-function appendMessage(role, text) {
-  const msg = document.createElement('div');
-  msg.className = `msg ${role}`;
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  bubble.textContent = text;
-  const time = document.createElement('span');
-  time.className = 'time';
-  time.textContent = now();
-  msg.appendChild(bubble);
-  msg.appendChild(time);
-  messagesEl.appendChild(msg);
-  scrollToBottom();
-  return msg;
+function mkRow(role, text) {
+  const row = document.createElement('div'); row.className = `msg-row ${role}`;
+  const av  = document.createElement('div'); av.className = `avatar ${role}`; av.textContent = role === 'bot' ? 'D' : '我';
+  const body= document.createElement('div'); body.className = 'msg-body';
+  const bub = document.createElement('div'); bub.className = 'bubble'; bub.textContent = text;
+  const t   = document.createElement('span'); t.className = 'msg-time'; t.textContent = fmtTime();
+  body.append(bub, t); row.append(av, body); msgEl.appendChild(row); scrollEnd();
+  return row;
 }
 
 function showTyping() {
-  const msg = document.createElement('div');
-  msg.className = 'msg bot';
-  msg.id = 'typing';
-  msg.innerHTML = `<div class="bubble typing-bubble">
-    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-  </div>`;
-  messagesEl.appendChild(msg);
-  scrollToBottom();
+  const row = document.createElement('div'); row.className = 'msg-row bot'; row.id = 'typing';
+  row.innerHTML = `<div class="avatar bot">D</div><div class="msg-body"><div class="bubble typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  msgEl.appendChild(row); scrollEnd();
 }
+function hideTyping() { document.getElementById('typing')?.remove(); }
 
-function hideTyping() {
-  document.getElementById('typing')?.remove();
-}
-
-function scrollToBottom() {
-  messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-}
-
-/** 创建流式 bot 气泡（含光标），返回 { msgEl, bubbleEl } */
-function createStreamBubble() {
+function mkStreamBubble() {
   hideTyping();
-  const msg = document.createElement('div');
-  msg.className = 'msg bot';
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  bubble.setAttribute('data-streaming', '');
-  const time = document.createElement('span');
-  time.className = 'time';
-  time.textContent = now();
-  msg.appendChild(bubble);
-  msg.appendChild(time);
-  messagesEl.appendChild(msg);
-  scrollToBottom();
-  return { msgEl: msg, bubbleEl: bubble, timeEl: time };
+  const row = document.createElement('div'); row.className = 'msg-row bot';
+  const av  = document.createElement('div'); av.className = 'avatar bot'; av.textContent = 'D';
+  const body= document.createElement('div'); body.className = 'msg-body';
+  const bub = document.createElement('div'); bub.className = 'bubble'; bub.setAttribute('data-streaming','');
+  const t   = document.createElement('span'); t.className = 'msg-time'; t.textContent = fmtTime();
+  body.append(bub, t); row.append(av, body); msgEl.appendChild(row); scrollEnd();
+  return { row, bub, body, t };
 }
 
-/** 流式更新气泡文本 */
-function updateStreamBubble(bubbleEl, chunks) {
-  bubbleEl.textContent = chunks.join('\n\n');
-  scrollToBottom();
-}
+function updateBub(bub, chunks) { bub.textContent = chunks.join('\n\n'); scrollEnd(); }
 
-/** 流完毕：移除光标，若多 chunk 加「思考过程」折叠区 */
-function finalizeStreamBubble(msgEl, bubbleEl, timeEl, chunks) {
-  bubbleEl.removeAttribute('data-streaming');
-
+function finalizeBub(body, bub, t, chunks) {
+  bub.removeAttribute('data-streaming');
   if (chunks.length > 1) {
-    const details = document.createElement('details');
-    details.className = 'thinking';
-    const summary = document.createElement('summary');
-    summary.textContent = `思考过程（共 ${chunks.length} 段）`;
-    const body = document.createElement('div');
-    body.className = 'thinking-body';
+    const det = document.createElement('details'); det.className = 'thinking';
+    const sum = document.createElement('summary'); sum.textContent = `思考过程（${chunks.length} 段）`;
+    const tb  = document.createElement('div'); tb.className = 'thinking-body';
     chunks.forEach((c, i) => {
-      const div = document.createElement('div');
-      div.className = 'thought';
-      div.innerHTML = `<span class="thought-idx">${i + 1}</span>${escapeHtml(c)}`;
-      body.appendChild(div);
+      const d = document.createElement('div'); d.className = 'thought';
+      d.innerHTML = `<span class="thought-idx">${String(i+1).padStart(2,'0')}</span>${esc(c)}`;
+      tb.appendChild(d);
     });
-    details.appendChild(summary);
-    details.appendChild(body);
-    // 插在 bubble 和 time 之间
-    msgEl.insertBefore(details, timeEl);
+    det.append(sum, tb); body.insertBefore(det, t);
   }
 }
 
-function setWaiting(val) {
-  isWaiting = val;
-  sendBtn.disabled = val;
-  inputEl.disabled = val;
-  statusText.textContent = val ? '正在回复...' : '在线';
+function setWaiting(v) {
+  isWaiting = v; sendBtn.disabled = v; inputEl.disabled = v;
+  statusEl.textContent = v ? 'PROCESSING' : 'STANDBY';
+  statusEl.style.opacity = v ? '0.7' : '0.3';
+  statusEl.style.color   = v ? 'var(--amber)' : 'var(--accent)';
 }
 
 async function sendMessage() {
   const text = inputEl.value.trim();
   if (!text || isWaiting) return;
-
-  inputEl.value = '';
-  inputEl.style.height = 'auto';
-  appendMessage('user', text);
-  setWaiting(true);
-  showTyping();
+  inputEl.value = ''; inputEl.style.height = 'auto';
+  mkRow('user', text); setWaiting(true); showTyping();
 
   try {
     const res = await fetch(STREAM_URL, {
@@ -395,59 +315,34 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text }),
     });
-
     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
-    const chunks = [];
-    let streamEl = null;
-    let buffer = '';
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+    const chunks = []; let el = null, buf = '';
+    const reader = res.body.getReader(); const decoder = new TextDecoder();
 
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      // SSE 以 \n\n 分隔事件
-      const parts = buffer.split('\n\n');
-      buffer = parts.pop(); // 保留不完整的最后片段
-
+      const { done, value } = await reader.read(); if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const parts = buf.split('\n\n'); buf = parts.pop();
       for (const part of parts) {
         for (const line of part.split('\n')) {
           if (!line.startsWith('data: ')) continue;
-          let event;
-          try { event = JSON.parse(line.slice(6)); } catch { continue; }
-
-          if (event.type === 'chunk') {
-            chunks.push(event.text);
-            if (!streamEl) {
-              // 第一个 chunk 到来：替换 typing 为真实气泡
-              streamEl = createStreamBubble();
-            }
-            updateStreamBubble(streamEl.bubbleEl, chunks);
-          } else if (event.type === 'done') {
-            if (streamEl) {
-              finalizeStreamBubble(streamEl.msgEl, streamEl.bubbleEl, streamEl.timeEl, chunks);
-            }
+          let ev; try { ev = JSON.parse(line.slice(6)); } catch { continue; }
+          if (ev.type === 'chunk') {
+            chunks.push(ev.text);
+            if (!el) el = mkStreamBubble();
+            updateBub(el.bub, chunks);
+          } else if (ev.type === 'done' && el) {
+            finalizeBub(el.body, el.bub, el.t, chunks);
           }
         }
       }
     }
-
-    // 兜底：若没收到任何 chunk
-    if (chunks.length === 0) {
-      hideTyping();
-      appendMessage('bot', '（无响应）');
-    }
-
+    if (!chunks.length) { hideTyping(); mkRow('bot', '（无响应）'); }
   } catch {
-    hideTyping();
-    appendMessage('bot', '连接失败，请检查 NanoClaw 是否运行。');
+    hideTyping(); mkRow('bot', '连接异常，请确认 NanoClaw 服务正在运行。');
   } finally {
-    setWaiting(false);
-    inputEl.focus();
+    setWaiting(false); inputEl.focus();
   }
 }
 </script>

@@ -113,9 +113,11 @@ python3 ~/.claude/skills/doss-mission/scripts/doss_mission.py events --task-id <
 
 ## 获取航线 ID（创建任务前）
 
-若需要创建任务但不知道 routeId，可直接查询 DOSS 接口：
+使用 `doss-route` Skill 查询：
 ```bash
-TOKEN=$(python3 -c "import json,pathlib; print(json.loads(pathlib.Path.home().joinpath('.claude','doss_session.json').read_text())['token'])")
-curl -H "Authorization: $TOKEN" \
-  "https://doss.xmrbi.com/xmrbi-onecas/uav/airRoute/list?types=5" | python3 -m json.tool
+# 查所有航线
+python3 ~/.claude/skills/doss-route/scripts/doss_route.py routes
+
+# 按名称过滤
+python3 ~/.claude/skills/doss-route/scripts/doss_route.py routes --name 巡检
 ```

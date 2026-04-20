@@ -12,6 +12,8 @@ npm run test:watch   # Watch mode
 npm run typecheck    # Type-check without emit
 npm run lint         # ESLint
 npm run lint:fix     # ESLint auto-fix
+npm run format       # Prettier format
+npm run format:check # Prettier check (CI)
 ./container/build.sh # Rebuild agent container image
 ```
 
@@ -52,7 +54,17 @@ Channel (WA/TG/Slack/…) → src/index.ts (orchestrator)
 
 **Groups**: Each chat maps to a folder under `groups/{name}/`. The folder contains an isolated `CLAUDE.md` (per-group memory) and is mounted read-write into the container. `groups/main/` and `groups/global/` are tracked in git; all others are gitignored.
 
-**Container skills** (`container/skills/`): Markdown/script bundles mounted read-only into every container at runtime. Current skills: `agent-browser`, `capabilities`, `doss-auth`, `doss-camera`, `doss-fly`, `doss-mission`, `doss-monitor`, `doss-status`, `slack-formatting`, `status`.
+**Container skills** (`container/skills/`): Markdown/script bundles mounted read-only into every container at runtime. Current skills: `agent-browser`, `capabilities`, `doss-auth`, `doss-camera`, `doss-fly`, `doss-mission`, `doss-monitor`, `doss-route`, `doss-status`, `doss-vision`, `slack-formatting`, `status`.
+
+**Task scheduler** (`src/task-scheduler.ts`): Polls `scheduled_tasks` in SQLite every `SCHEDULER_POLL_INTERVAL` ms. Supports `once`, `interval`, and `cron` schedule types (cron parsed via `cron-parser`, timezone-aware). Next-run times are anchored to the scheduled time to prevent cumulative drift.
+
+**Persistence** (`src/db.ts`): SQLite via `better-sqlite3`. Tables: `chats`, `messages`, `scheduled_tasks`, `task_run_logs`. DB migrations run automatically on startup via `src/db-migration.ts`.
+
+**Remote control** (`src/remote-control.ts`): Starts a Claude Code session from within a chat, captures the share URL, and tracks the PID in `data/remote-control.json`. One session at a time.
+
+**Sender allowlist** (`src/sender-allowlist.ts`): Per-chat access control read from `data/sender-allowlist.json`. Config shape: `{ default, chats, logDenied }` where each entry has `allow: '*' | string[]` and `mode: 'trigger' | 'drop'`.
+
+**Container runtime abstraction** (`src/container-runtime.ts`): Detects and wraps Docker/Podman/nerdctl differences. Provides `CONTAINER_RUNTIME_BIN`, `hostGatewayArgs`, `readonlyMountArgs`, and `stopContainer`.
 
 ## Secrets / Credentials
 

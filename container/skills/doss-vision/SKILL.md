@@ -10,8 +10,15 @@ description: |
 
 ## 使用方式
 
-获得图片 URL 后，直接将其传入 Vision 分析，按以下格式输出结论。
-无需额外脚本，Claude 原生处理图像内容。
+获得图片 URL 后，调用 Python 脚本发送给 Qwen VLM 分析（主对话模型为 GLM，不支持图像）：
+
+```bash
+python3 ~/.claude/skills/doss-vision/scripts/doss_vision.py \
+  --image-url "<图片URL>" \
+  --task "<任务说明，如：检查路灯是否正常>"
+```
+
+脚本自动读取 VLM_BASE_URL / VLM_API_KEY / VLM_MODEL 环境变量（由系统注入，无需手动配置）。
 
 ## 输出格式（必须严格遵守）
 

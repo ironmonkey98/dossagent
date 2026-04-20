@@ -255,7 +255,13 @@ async function buildContainerArgs(
   args.push('-e', `TZ=${TIMEZONE}`);
 
   // Anthropic-compatible GLM endpoint — lets Claude Code use GLM instead of Anthropic
-  const llmEnv = readEnvFile(['ANTHROPIC_BASE_URL', 'ANTHROPIC_API_KEY']);
+  const llmEnv = readEnvFile([
+    'ANTHROPIC_BASE_URL',
+    'ANTHROPIC_API_KEY',
+    'VLM_BASE_URL',
+    'VLM_API_KEY',
+    'VLM_MODEL',
+  ]);
   const anthropicBaseUrl =
     process.env.ANTHROPIC_BASE_URL || llmEnv.ANTHROPIC_BASE_URL;
   const anthropicApiKey =
@@ -266,6 +272,14 @@ async function buildContainerArgs(
     args.push('-e', `ANTHROPIC_API_KEY=${anthropicApiKey}`);
     args.push('-e', `ANTHROPIC_AUTH_TOKEN=${anthropicApiKey}`);
   }
+
+  // Qwen VLM endpoint — injected for doss-vision Python script (image analysis only)
+  const vlmBaseUrl = process.env.VLM_BASE_URL || llmEnv.VLM_BASE_URL;
+  const vlmApiKey = process.env.VLM_API_KEY || llmEnv.VLM_API_KEY;
+  const vlmModel = process.env.VLM_MODEL || llmEnv.VLM_MODEL;
+  if (vlmBaseUrl) args.push('-e', `VLM_BASE_URL=${vlmBaseUrl}`);
+  if (vlmApiKey) args.push('-e', `VLM_API_KEY=${vlmApiKey}`);
+  if (vlmModel) args.push('-e', `VLM_MODEL=${vlmModel}`);
 
   // OneCLI gateway handles credential injection — containers never see real secrets.
   // The gateway intercepts HTTPS traffic and injects API keys or OAuth tokens.

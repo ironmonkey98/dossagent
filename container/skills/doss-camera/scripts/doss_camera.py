@@ -36,6 +36,7 @@ except ImportError:
     sys.exit(1)
 
 BASE_URL = "https://doss.xmrbi.com/xmrbi-onecas/uav/cockpit"
+STREAM_URL = "https://doss.xmrbi.com/xmrbi-onecas/video/stream/v2/liveStream"
 SESSION_FILE = Path.home() / ".claude" / "doss_session.json"
 
 
@@ -188,6 +189,44 @@ def cmd_payload(args, token):
     print_result(data, "抢夺负载控制权")
 
 
+def cmd_stream(args, token):
+    """获取实时视频流地址（6.6接口）"""
+    payload = [{"deviceCode": args.device, "protocol": args.protocol, "type": str(args.stream_type)}]
+    print(f"\n获取实时视频流  设备:{args.device}  协议:{args.protocol}  码流:{args.stream_type}\n")
+    try:
+        resp = requests.post(
+            STREAM_URL,
+            headers={"token": token, "Content-Type": "application/json"},
+            json=payload,
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except requests.RequestException as e:
+        print(f"[错误] 视频流请求失败：{e}")
+        sys.exit(1)
+
+    if not data.get("success"):
+        print(f"⚠️  获取失败：{data.get('msg', '未知错误')}")
+        sys.exit(1)
+
+    streams = data.get("list", [])
+    if not streams:
+        print("⚠️  未返回任何视频流，设备可能不在线或无推流")
+        sys.exit(1)
+
+    for s in streams:
+        url = s.get("streamUrl", "")
+        print(f"✅ 视频流获取成功")
+        print(f"   协议：{args.protocol}")
+        print(f"   地址：{url}")
+        print(f"   平台：{s.get('configName', '-')}  厂商：{s.get('manufacturer', '-')}")
+        if args.protocol in ("HLS", "FLV", "WS"):
+            print(f"\n   💡 可在浏览器或播放器中打开：{url}")
+        elif args.protocol == "RTSP":
+            print(f"\n   💡 可用 VLC 打开：vlc \"{url}\"")
+
+
 # ─── 主入口 ───────────────────────────────────────────────────────────────────
 
 def main():
@@ -249,6 +288,15 @@ def main():
     p.add_argument("--dock", required=True, help="机场编号")
     p.add_argument("--confirm", action="store_true", help="二次确认")
 
+    # stream — 实时视频流
+    p = sub.add_parser("stream", help="获取实时视频流地址")
+    p.add_argument("--device", required=True, help="无人机 deviceCode（从 doss-status 获取）")
+    p.add_argument("--protocol", default="HLS",
+                   choices=["RTSP", "RTMP", "HLS", "FLV", "WS"],
+                   help="流协议（默认HLS，浏览器兼容性最好）")
+    p.add_argument("--stream-type", type=int, default=1, choices=[1, 2],
+                   help="码流类型：1=主码流（默认）2=辅码流")
+
     args = parser.parse_args()
     token = load_token()
 
@@ -261,6 +309,7 @@ def main():
         "light":   cmd_light,
         "speaker": cmd_speaker,
         "payload": cmd_payload,
+        "stream":  cmd_stream,
     }
     dispatch[args.cmd](args, token)
 
