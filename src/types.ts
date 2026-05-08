@@ -110,3 +110,18 @@ export type OnChatMetadata = (
   channel?: string,
   isGroup?: boolean,
 ) => void;
+
+// --- Audit Log ---
+
+export type RiskLevel = 'safe' | 'risky' | 'dangerous';
+export type AuditVerdict = 'pass' | 'blocked' | 'redacted' | 'approved';
+
+export interface AuditEntry {
+  sourceGroup: string;
+  action: string;
+  riskLevel: RiskLevel;
+  verdict: AuditVerdict;
+  payload?: string;
+  approver?: string;
+  detail?: string;
+}

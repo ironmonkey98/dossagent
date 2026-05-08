@@ -7,8 +7,11 @@ import fs from 'fs';
 import path from 'path';
 
 import {
+  CONTAINER_CPU_LIMIT,
   CONTAINER_IMAGE,
   CONTAINER_MAX_OUTPUT_SIZE,
+  CONTAINER_MEMORY_LIMIT,
+  CONTAINER_PIDS_LIMIT,
   CONTAINER_TIMEOUT,
   DATA_DIR,
   GROUPS_DIR,
@@ -316,6 +319,12 @@ async function buildContainerArgs(
       args.push('-v', `${mount.hostPath}:${mount.containerPath}`);
     }
   }
+
+  // 资源限制：防止失控 Agent 消耗过多资源
+  args.push('--memory', CONTAINER_MEMORY_LIMIT);
+  args.push('--memory-swap', CONTAINER_MEMORY_LIMIT); // 禁止 swap
+  args.push('--cpus', CONTAINER_CPU_LIMIT);
+  args.push('--pids-limit', String(CONTAINER_PIDS_LIMIT));
 
   args.push(CONTAINER_IMAGE);
 

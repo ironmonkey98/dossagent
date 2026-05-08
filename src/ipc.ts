@@ -8,7 +8,8 @@ import { AvailableGroup } from './container-runner.js';
 import { createTask, deleteTask, getTaskById, updateTask } from './db.js';
 import { isValidGroupFolder } from './group-folder.js';
 import { logger } from './logger.js';
-import { RegisteredGroup } from './types.js';
+import { classifyAction } from './ipc-guard.js';
+import { AuditEntry, RegisteredGroup } from './types.js';
 
 export interface IpcDeps {
   sendMessage: (jid: string, text: string) => Promise<void>;
@@ -24,6 +25,7 @@ export interface IpcDeps {
   ) => void;
   onTasksChanged: () => void;
   storeResumeContext: (chatJid: string, context: string) => void;
+  writeAuditLog: (entry: AuditEntry) => void;
 }
 
 let ipcWatcherRunning = false;
@@ -75,6 +77,40 @@ export function startIpcWatcher(deps: IpcDeps): void {
             const filePath = path.join(messagesDir, file);
             try {
               const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+              // IPC Guard: 分级审核每个 IPC action
+              const guardResult = classifyAction({
+                type: data.type,
+                payload: data,
+              });
+              if (guardResult.verdict === 'blocked') {
+                logger.warn(
+                  { sourceGroup, type: data.type, detail: guardResult.detail },
+                  'IPC blocked by guard',
+                );
+                deps.writeAuditLog({
+                  sourceGroup,
+                  action: `ipc_${data.type}`,
+                  riskLevel: guardResult.riskLevel,
+                  verdict: 'blocked',
+                  payload: JSON.stringify(data).substring(0, 1000),
+                  detail: guardResult.detail,
+                });
+                fs.unlinkSync(filePath);
+                continue;
+              }
+              if (guardResult.riskLevel !== 'safe') {
+                logger.info(
+                  { sourceGroup, type: data.type, riskLevel: guardResult.riskLevel, detail: guardResult.detail },
+                  'IPC action passed with elevated risk',
+                );
+                deps.writeAuditLog({
+                  sourceGroup,
+                  action: `ipc_${data.type}`,
+                  riskLevel: guardResult.riskLevel,
+                  verdict: 'pass',
+                  detail: guardResult.detail,
+                });
+              }
               if (data.type === 'message' && data.chatJid && data.text) {
                 // Authorization: verify this group can send to this chatJid
                 const targetGroup = registeredGroups[data.chatJid];
@@ -149,6 +185,40 @@ export function startIpcWatcher(deps: IpcDeps): void {
             const filePath = path.join(tasksDir, file);
             try {
               const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+              // IPC Guard: 分级审核每个 IPC task action
+              const guardResult = classifyAction({
+                type: data.type,
+                payload: data,
+              });
+              if (guardResult.verdict === 'blocked') {
+                logger.warn(
+                  { sourceGroup, type: data.type, detail: guardResult.detail },
+                  'IPC task blocked by guard',
+                );
+                deps.writeAuditLog({
+                  sourceGroup,
+                  action: `ipc_${data.type}`,
+                  riskLevel: guardResult.riskLevel,
+                  verdict: 'blocked',
+                  payload: JSON.stringify(data).substring(0, 1000),
+                  detail: guardResult.detail,
+                });
+                fs.unlinkSync(filePath);
+                continue;
+              }
+              if (guardResult.riskLevel !== 'safe') {
+                logger.info(
+                  { sourceGroup, type: data.type, riskLevel: guardResult.riskLevel, detail: guardResult.detail },
+                  'IPC task action passed with elevated risk',
+                );
+                deps.writeAuditLog({
+                  sourceGroup,
+                  action: `ipc_${data.type}`,
+                  riskLevel: guardResult.riskLevel,
+                  verdict: 'pass',
+                  detail: guardResult.detail,
+                });
+              }
               // Pass source group identity to processTaskIpc for authorization
               await processTaskIpc(data, sourceGroup, isMain, deps);
               fs.unlinkSync(filePath);

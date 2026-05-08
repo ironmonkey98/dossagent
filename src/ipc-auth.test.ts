@@ -64,6 +64,7 @@ beforeEach(() => {
     writeGroupsSnapshot: () => {},
     onTasksChanged: () => {},
     storeResumeContext: () => {},
+    writeAuditLog: () => {},
   };
 });
 

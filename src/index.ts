@@ -35,6 +35,7 @@ import {
   getAllSessions,
   deleteSession,
   getAllTasks,
+  getDatabase,
   getLastBotMessageTimestamp,
   getMessagesSince,
   getNewMessages,
@@ -62,6 +63,8 @@ import {
   loadSenderAllowlist,
   shouldDropMessage,
 } from './sender-allowlist.js';
+import { sanitizeOutput, scanForSecrets } from './output-guard.js';
+import { writeAuditLog } from './audit-log.js';
 import { startSessionCleanup } from './session-cleanup.js';
 import { startSchedulerLoop } from './task-scheduler.js';
 import { Channel, NewMessage, RegisteredGroup } from './types.js';
@@ -302,8 +305,26 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
         typeof result.result === 'string'
           ? result.result
           : JSON.stringify(result.result);
-      // Strip <internal>...</internal> blocks — agent uses these for internal reasoning
-      const text = raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim();
+      // Strip <internal>...</internal> blocks, then sanitize for sensitive info
+      const text = sanitizeOutput(raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim());
+
+      // Log if sensitive information was detected
+      const secretScan = scanForSecrets(raw);
+      if (secretScan.hasSecrets) {
+        logger.warn(
+          { group: group.name, secrets: secretScan.matches.map(m => m.rule) },
+          'Sensitive information detected in container output (redacted)',
+        );
+        writeAuditLog(getDatabase(), {
+          sourceGroup: group.folder,
+          action: 'container_output',
+          riskLevel: 'risky',
+          verdict: 'redacted',
+          payload: secretScan.matches.map(m => m.rule).join(','),
+          detail: 'Sensitive information detected in container output',
+        });
+      }
+
       logger.info({ group: group.name }, `Agent output: ${raw.length} chars`);
       if (text) {
         await channel.sendMessage(chatJid, text);
@@ -788,6 +809,7 @@ async function main(): Promise<void> {
         'Resume context stored for breakpoint interaction',
       );
     },
+    writeAuditLog: (entry) => writeAuditLog(getDatabase(), entry),
   });
   startSessionCleanup();
   queue.setProcessMessagesFn(processGroupMessages);

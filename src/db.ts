@@ -84,6 +84,22 @@ function createSchema(database: Database.Database): void {
     );
   `);
 
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+      source_group TEXT NOT NULL,
+      action TEXT NOT NULL,
+      risk_level TEXT NOT NULL CHECK(risk_level IN ('safe', 'risky', 'dangerous')),
+      verdict TEXT NOT NULL CHECK(verdict IN ('pass', 'blocked', 'redacted', 'approved')),
+      payload TEXT,
+      approver TEXT,
+      detail TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
+    CREATE INDEX IF NOT EXISTS idx_audit_verdict ON audit_logs(verdict);
+  `);
+
   // Add context_mode column if it doesn't exist (migration for existing DBs)
   try {
     database.exec(
@@ -179,6 +195,11 @@ export function _initTestDatabase(): void {
 /** @internal - for tests only. */
 export function _closeDatabase(): void {
   db.close();
+}
+
+/** 获取底层 Database 实例（供审计日志等模块使用） */
+export function getDatabase(): Database.Database {
+  return db;
 }
 
 /**

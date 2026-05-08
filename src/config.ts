@@ -38,6 +38,12 @@ export const SENDER_ALLOWLIST_PATH = path.join(
   'nanoclaw',
   'sender-allowlist.json',
 );
+export const GUARD_CONFIG_PATH = path.join(
+  HOME_DIR,
+  '.config',
+  'nanoclaw',
+  'guard-config.json',
+);
 export const STORE_DIR = path.resolve(PROJECT_ROOT, 'store');
 export const GROUPS_DIR = path.resolve(PROJECT_ROOT, 'groups');
 export const DATA_DIR = path.resolve(PROJECT_ROOT, 'data');
@@ -52,6 +58,13 @@ export const CONTAINER_MAX_OUTPUT_SIZE = parseInt(
   process.env.CONTAINER_MAX_OUTPUT_SIZE || '10485760',
   10,
 ); // 10MB default
+export const CONTAINER_MEMORY_LIMIT =
+  process.env.CONTAINER_MEMORY_LIMIT || '512m';
+export const CONTAINER_CPU_LIMIT = process.env.CONTAINER_CPU_LIMIT || '1.0';
+export const CONTAINER_PIDS_LIMIT = parseInt(
+  process.env.CONTAINER_PIDS_LIMIT || '256',
+  10,
+);
 export const ONECLI_URL = process.env.ONECLI_URL || envConfig.ONECLI_URL;
 export const ONECLI_API_KEY =
   process.env.ONECLI_API_KEY || envConfig.ONECLI_API_KEY;
