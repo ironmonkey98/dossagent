@@ -8,7 +8,9 @@ describe('scanForSecrets', () => {
     expect(result.hasSecrets).toBe(true);
     expect(result.matches.length).toBeGreaterThanOrEqual(1);
     expect(result.matches[0].rule).toBe('api_key');
-    expect(result.matches[0].match).toContain('sk-abc123def456ghi789jkl012mno345');
+    expect(result.matches[0].match).toContain(
+      'sk-abc123def456ghi789jkl012mno345',
+    );
   });
 
   it('should detect API keys with colon format', () => {
@@ -19,7 +21,8 @@ describe('scanForSecrets', () => {
   });
 
   it('should detect Bearer tokens', () => {
-    const text = 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc==';
+    const text =
+      'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc==';
     const result = scanForSecrets(text);
     expect(result.hasSecrets).toBe(true);
     const bearerMatch = result.matches.find((m) => m.rule === 'bearer_token');
@@ -60,17 +63,23 @@ describe('scanForSecrets', () => {
   });
 
   it('should detect RSA private key blocks', () => {
-    const text = '-----BEGIN RSA PRIVATE KEY-----\nMIIEowI...\n-----END RSA PRIVATE KEY-----';
+    const text =
+      '-----BEGIN RSA PRIVATE KEY-----\nMIIEowI...\n-----END RSA PRIVATE KEY-----';
     const result = scanForSecrets(text);
     expect(result.hasSecrets).toBe(true);
-    expect(result.matches.some((m) => m.rule === 'private_key_block')).toBe(true);
+    expect(result.matches.some((m) => m.rule === 'private_key_block')).toBe(
+      true,
+    );
   });
 
   it('should detect EC private key blocks', () => {
-    const text = '-----BEGIN EC PRIVATE KEY-----\nMHQCAQ...\n-----END EC PRIVATE KEY-----';
+    const text =
+      '-----BEGIN EC PRIVATE KEY-----\nMHQCAQ...\n-----END EC PRIVATE KEY-----';
     const result = scanForSecrets(text);
     expect(result.hasSecrets).toBe(true);
-    expect(result.matches.some((m) => m.rule === 'private_key_block')).toBe(true);
+    expect(result.matches.some((m) => m.rule === 'private_key_block')).toBe(
+      true,
+    );
   });
 
   it('should detect JWT tokens', () => {

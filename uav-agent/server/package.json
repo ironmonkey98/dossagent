@@ -1,0 +1,20 @@
+{
+  "name": "uav-agent-server",
+  "version": "1.0.0",
+  "description": "UAV NLP Control Agent - Backend Server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "form-data": "^4.0.5",
+    "multer": "^2.1.1",
+    "sm-crypto": "^0.4.0",
+    "ws": "^8.18.0"
+  }
+}

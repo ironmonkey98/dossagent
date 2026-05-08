@@ -1,6 +1,11 @@
 ---
 name: agent-browser
-description: Browse the web for any task — research topics, read articles, interact with web apps, fill forms, take screenshots, extract data, and test web pages. Use whenever a browser would be useful, not just when the user explicitly asks.
+description: |
+  Browse the web for any task — research topics, read articles, interact with web apps,
+  fill forms, take screenshots, extract data, and test web pages.
+  Use whenever a browser would be useful, not just when the user explicitly asks.
+  Also trigger when: web scraping, form filling, page interaction, taking screenshots of websites,
+  reading web content behind authentication, testing web UI, monitoring page changes.
 allowed-tools: Bash(agent-browser:*)
 ---
 
@@ -157,3 +162,23 @@ agent-browser get text @e1  # Get product title
 agent-browser get attr @e2 href  # Get link URL
 agent-browser screenshot products.png
 ```
+
+## Error Recovery
+
+When commands fail, follow these steps:
+
+| Problem | Likely Cause | Recovery |
+|---------|-------------|----------|
+| `snapshot` returns empty | Page still loading | `agent-browser wait --load networkidle` then re-snapshot |
+| `click @eN` fails | Element gone after DOM update | Re-run `agent-browser snapshot -i` for fresh refs |
+| `fill` doesn't work | Input is not a standard textbox | Try `agent-browser type` or `agent-browser eval` |
+| Page not loading | Network / DNS issue | Check with `agent-browser get url` and `agent-browser eval "document.readyState"` |
+| Browser crashes | OOM or tab limit | `agent-browser close` then reopen |
+| Auth required | Session expired | Use `agent-browser state load auth.json` or re-login |
+| Timeout on `wait` | Element never appears | Increase timeout or check selector with `snapshot` |
+
+### General recovery pattern
+
+1. Re-snapshot to get fresh element refs
+2. Check page state: `agent-browser get url` + `agent-browser eval "document.title"`
+3. If stuck, close and reopen: `agent-browser close` → `agent-browser open <url>`

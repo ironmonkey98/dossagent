@@ -25,8 +25,7 @@ const SECRET_RULES: { name: string; pattern: RegExp }[] = [
   // API Key: 匹配 api_key=xxx, apiKey: xxx 等格式
   {
     name: 'api_key',
-    pattern:
-      /(?:api[_-]?key|apikey)\s*[:=]\s*["']?([\w-]{20,})["']?/gi,
+    pattern: /(?:api[_-]?key|apikey)\s*[:=]\s*["']?([\w-]{20,})["']?/gi,
   },
   // Bearer Token
   {
@@ -36,19 +35,18 @@ const SECRET_RULES: { name: string; pattern: RegExp }[] = [
   // 密码
   {
     name: 'password',
-    pattern:
-      /(?:password|passwd|pwd)\s*[:=]\s*["']?[\S]{6,}["']?/gi,
+    pattern: /(?:password|passwd|pwd)\s*[:=]\s*["']?[\S]{6,}["']?/gi,
   },
   // Secret Key（含 AWS 风格的 / 字符）
   {
     name: 'secret_key',
-    pattern:
-      /(?:secret[_-]?key|secret)\s*[:=]\s*["']?([\w\-/]{16,})["']?/gi,
+    pattern: /(?:secret[_-]?key|secret)\s*[:=]\s*["']?([\w\-/]{16,})["']?/gi,
   },
   // 私钥块（RSA/EC）— 匹配整个 PEM 块
   {
     name: 'private_key_block',
-    pattern: /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----[\s\S]*?-----END (?:RSA |EC )?PRIVATE KEY-----/g,
+    pattern:
+      /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----[\s\S]*?-----END (?:RSA |EC )?PRIVATE KEY-----/g,
   },
   // JWT Token (三段式 base64url)
   {

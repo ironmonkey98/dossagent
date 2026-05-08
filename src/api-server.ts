@@ -151,7 +151,10 @@ export class ApiChannel implements Channel {
   }
 
   /** Injects a message and waits for the agent response; onChunk called for each streamed chunk */
-  async processRequest(content: string, onChunk?: (text: string) => void): Promise<string[]> {
+  async processRequest(
+    content: string,
+    onChunk?: (text: string) => void,
+  ): Promise<string[]> {
     return new Promise((resolve) => {
       const timer = setTimeout(() => {
         const idx = this.queue.findIndex((r) => r.resolve === resolve);
@@ -246,7 +249,9 @@ export class ApiChannel implements Channel {
       // POST /api/stream  →  SSE: data:{"type":"chunk","text":"..."} / data:{"type":"done"}
       if (req.method === 'POST' && req.url === '/api/stream') {
         let body = '';
-        req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+        req.on('data', (chunk: Buffer) => {
+          body += chunk.toString();
+        });
         req.on('end', async () => {
           try {
             const data: unknown = JSON.parse(body);
@@ -264,17 +269,22 @@ export class ApiChannel implements Channel {
             res.writeHead(200, {
               'Content-Type': 'text/event-stream',
               'Cache-Control': 'no-cache',
-              'Connection': 'keep-alive',
+              Connection: 'keep-alive',
             });
 
             let closed = false;
             // 监听 res 而非 req：req.close 在请求 body 读完后立即触发，与客户端断连无关
-            res.on('close', () => { closed = true; });
+            res.on('close', () => {
+              closed = true;
+            });
 
-            res.flushHeaders();  // 立即发送 SSE 头部，避免客户端等待
+            res.flushHeaders(); // 立即发送 SSE 头部，避免客户端等待
 
             const onChunk = (text: string) => {
-              if (!closed) res.write(`data: ${JSON.stringify({ type: 'chunk', text })}\n\n`);
+              if (!closed)
+                res.write(
+                  `data: ${JSON.stringify({ type: 'chunk', text })}\n\n`,
+                );
             };
 
             await this.processRequest(message, onChunk);

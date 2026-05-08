@@ -24,7 +24,7 @@ const MAX_PAYLOAD_SIZE = 200_000;
 const INJECTION_PATTERNS: RegExp[] = [
   /<script[\s>]/gi,
   /javascript:/gi,
-  /on\w+\s*=/gi,  // event handlers like onerror=
+  /on\w+\s*=/gi, // event handlers like onerror=
 ];
 
 // Action 分级规则表
@@ -34,11 +34,11 @@ interface ActionRule {
 }
 
 const ACTION_RULES: Record<string, ActionRule> = {
-  message:          { riskLevel: 'safe',     autoApprove: true },
-  ask_user:         { riskLevel: 'safe',     autoApprove: true },
-  register_group:   { riskLevel: 'safe',     autoApprove: true },
-  schedule_task:    { riskLevel: 'risky',    autoApprove: true },
-  delete_task:      { riskLevel: 'risky',    autoApprove: true },
+  message: { riskLevel: 'safe', autoApprove: true },
+  ask_user: { riskLevel: 'safe', autoApprove: true },
+  register_group: { riskLevel: 'safe', autoApprove: true },
+  schedule_task: { riskLevel: 'risky', autoApprove: true },
+  delete_task: { riskLevel: 'risky', autoApprove: true },
 };
 
 const DEFAULT_RULE: ActionRule = { riskLevel: 'risky', autoApprove: true };
@@ -67,14 +67,20 @@ export function classifyAction(action: IpcAction): GuardResult {
   // 1. Payload size check
   const sizeError = checkPayloadSize(action.payload);
   if (sizeError) {
-    logger.warn({ type: action.type, detail: sizeError }, 'IPC blocked: oversized payload');
+    logger.warn(
+      { type: action.type, detail: sizeError },
+      'IPC blocked: oversized payload',
+    );
     return { riskLevel: 'risky', verdict: 'blocked', detail: sizeError };
   }
 
   // 2. Injection pattern check
   const injectionError = checkInjection(action.payload);
   if (injectionError) {
-    logger.warn({ type: action.type, detail: injectionError }, 'IPC flagged: injection pattern');
+    logger.warn(
+      { type: action.type, detail: injectionError },
+      'IPC flagged: injection pattern',
+    );
     const rule = ACTION_RULES[action.type] ?? DEFAULT_RULE;
     return {
       riskLevel: 'risky',

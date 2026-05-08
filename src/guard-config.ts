@@ -58,11 +58,17 @@ export function loadGuardConfig(filePath?: string): GuardConfig {
     return {
       outputGuard: { ...DEFAULT_CONFIG.outputGuard, ...parsed.outputGuard },
       ipcGuard: { ...DEFAULT_CONFIG.ipcGuard, ...parsed.ipcGuard },
-      inputSanitize: { ...DEFAULT_CONFIG.inputSanitize, ...parsed.inputSanitize },
+      inputSanitize: {
+        ...DEFAULT_CONFIG.inputSanitize,
+        ...parsed.inputSanitize,
+      },
       auditLog: { ...DEFAULT_CONFIG.auditLog, ...parsed.auditLog },
     };
   } catch (err) {
-    logger.debug({ filePath, err }, 'Guard config not found or invalid, using defaults');
+    logger.debug(
+      { filePath, err },
+      'Guard config not found or invalid, using defaults',
+    );
     return DEFAULT_CONFIG;
   }
 }

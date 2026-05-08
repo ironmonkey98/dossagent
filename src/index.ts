@@ -306,13 +306,15 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
           ? result.result
           : JSON.stringify(result.result);
       // Strip <internal>...</internal> blocks, then sanitize for sensitive info
-      const text = sanitizeOutput(raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim());
+      const text = sanitizeOutput(
+        raw.replace(/<internal>[\s\S]*?<\/internal>/g, '').trim(),
+      );
 
       // Log if sensitive information was detected
       const secretScan = scanForSecrets(raw);
       if (secretScan.hasSecrets) {
         logger.warn(
-          { group: group.name, secrets: secretScan.matches.map(m => m.rule) },
+          { group: group.name, secrets: secretScan.matches.map((m) => m.rule) },
           'Sensitive information detected in container output (redacted)',
         );
         writeAuditLog(getDatabase(), {
@@ -320,7 +322,7 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
           action: 'container_output',
           riskLevel: 'risky',
           verdict: 'redacted',
-          payload: secretScan.matches.map(m => m.rule).join(','),
+          payload: secretScan.matches.map((m) => m.rule).join(','),
           detail: 'Sensitive information detected in container output',
         });
       }

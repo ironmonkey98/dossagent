@@ -6,7 +6,11 @@ import { loadGuardConfig } from './guard-config.js';
 const TEST_CONFIG_PATH = path.join('/tmp', 'test-guard-config.json');
 
 afterEach(() => {
-  try { fs.unlinkSync(TEST_CONFIG_PATH); } catch { /* ignore */ }
+  try {
+    fs.unlinkSync(TEST_CONFIG_PATH);
+  } catch {
+    /* ignore */
+  }
 });
 
 describe('loadGuardConfig', () => {
@@ -25,10 +29,13 @@ describe('loadGuardConfig', () => {
   });
 
   it('should parse valid config JSON with partial override', () => {
-    fs.writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
-      outputGuard: { enabled: false },
-      ipcGuard: { maxPayloadSize: 100000 },
-    }));
+    fs.writeFileSync(
+      TEST_CONFIG_PATH,
+      JSON.stringify({
+        outputGuard: { enabled: false },
+        ipcGuard: { maxPayloadSize: 100000 },
+      }),
+    );
     const config = loadGuardConfig(TEST_CONFIG_PATH);
     expect(config.outputGuard.enabled).toBe(false);
     expect(config.outputGuard.scanSecrets).toBe(true); // default preserved

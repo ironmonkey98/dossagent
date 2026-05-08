@@ -1,16 +1,28 @@
 ---
 name: doss-vision
 description: |
-  对无人机拍摄的图片进行视觉分析，输出结构化巡检结论。
-  当需要分析无人机图传画面或拍摄图片时触发。
-  依赖 doss-camera 提供的图片 URL。
+  对无人机拍摄的图片进行视觉分析与结构化巡检结论。
+  当用户说"分析图片"、"看看这张照片"、"检查画面"、"视觉分析"、
+  "图像识别"、"图片里有什么"、"分析巡检照片"、"检查是否异常"时触发此 Skill。
+  通过 uav-agent 的 VLM 服务（Qwen VL）分析图片。
+  依赖 doss-auth 提供的 Token。
 ---
 
 # DOSS Vision 图像分析 Skill
 
+## 概述
+
+通过 uav-agent 的 VLM 服务对无人机拍摄图片进行智能分析。VLM（Qwen VL）在 uav-agent 内部调用，图片通过 HTTP 截图接口获取。
+
 ## 使用方式
 
-获得图片 URL 后，调用 Python 脚本发送给 Qwen VLM 分析（主对话模型为 GLM，不支持图像）：
+### 方式一：在视觉导航任务中自动分析
+
+视觉搜索 (`POST /api/visual-search`) 和跟踪 (`POST /api/visual-track`) 自动调用 VLM 分析每一帧。无需单独调用 doss-vision。
+
+### 方式二：单独分析指定图片
+
+如果需要分析特定图片 URL，调用 doss-vision Python 脚本：
 
 ```bash
 python3 ~/.claude/skills/doss-vision/scripts/doss_vision.py \
@@ -18,9 +30,9 @@ python3 ~/.claude/skills/doss-vision/scripts/doss_vision.py \
   --task "<任务说明，如：检查路灯是否正常>"
 ```
 
-脚本自动读取 VLM_BASE_URL / VLM_API_KEY / VLM_MODEL 环境变量（由系统注入，无需手动配置）。
+> 脚本读取 VLM_BASE_URL / VLM_API_KEY / VLM_MODEL 环境变量。
 
-## 输出格式（必须严格遵守）
+## 输出格式
 
 ```
 【视觉分析结论】
@@ -31,18 +43,27 @@ python3 ~/.claude/skills/doss-vision/scripts/doss_vision.py \
 建议下一步：[继续下一航点 / 调整变焦 / 抵近拍摄 / 请求人工确认]
 ```
 
-## 量化判断示例
+## 量化判断标准
 
 | 场景 | 判断标准 | 建议 |
-|---|---|---|
+|------|---------|------|
 | 裂缝检测 | 裂缝占画面 ≥ 60% 视为清晰 | 清晰则记录，否则抵近 |
 | 设备检查 | 目标设备完整出现在画面内 | 否则调整角度重拍 |
 | 火情识别 | 任何明火或烟雾即触发异常 | 立即请求人工确认 |
 | 正常巡检 | 无明显异常，画面清晰 | 继续下一航点 |
 
-## 触发挂起的条件
+## 触发挂起条件
 
-遇到以下情况，停止分析并向用户提问，等待指示后继续：
+遇到以下情况停止分析并请求用户指示：
 - 目标可见性为"不可见"或"模糊"且无法自动调整
 - 检测到高风险异常（火情、结构破损、人员入侵）
-- 分析结论为"不确定"
+- 图片 URL 无法访问
+
+## 常见错误处理
+
+| 错误信息 | 原因 | 解决方案 |
+|---------|------|---------|
+| `VLM 服务不可用` | 环境变量未配置 | 检查 VLM_API_KEY |
+| `图片 URL 无法访问` | URL 过期 | 通过 doss-camera 重新获取 |
+| `Token 过期` | doss-auth Token 失效 | 重新运行 doss-auth |
+| `分析超时` | 图片过大 | 缩小图片后重试 |

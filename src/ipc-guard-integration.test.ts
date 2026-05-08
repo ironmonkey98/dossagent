@@ -24,7 +24,10 @@ describe('IPC Guard integration scenarios', () => {
   it('should flag XSS injection in message text', () => {
     const action: IpcAction = {
       type: 'message',
-      payload: { chatJid: 'test@g.us', text: '<script>document.cookie</script>' },
+      payload: {
+        chatJid: 'test@g.us',
+        text: '<script>document.cookie</script>',
+      },
     };
     const result = classifyAction(action);
     expect(result.riskLevel).toBe('risky');

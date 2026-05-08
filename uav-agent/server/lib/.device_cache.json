@@ -1,0 +1,318 @@
+{
+  "docks": [
+    {
+      "dockCode": "8UUXN4E00A05CU",
+      "dockName": "公路中心上陵站机场",
+      "dockId": "22556f9c8dc34b7f942d342ae7d06007",
+      "model": "Dock 3",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市同安区",
+      "aircraft": {
+        "deviceCode": "1581F8HGX25AT00A10K9",
+        "deviceName": "上陵驿站（临时）无人机",
+        "deviceId": "3fd73c99c7e44fdcacc8daf1852e6230",
+        "model": "Matrice 4TD",
+        "online": "0",
+        "cameraIndex": "99-0-0"
+      },
+      "available": true,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "8UUXN4R00A06RS",
+      "dockName": "同安大桥（琼头）机场",
+      "dockId": "cfbed05974aa4dd0939aa653b981dcf0",
+      "model": "Dock 3",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市同安区",
+      "aircraft": {
+        "deviceCode": "1581F8HGX256B00A0J51",
+        "deviceName": "同安大桥（琼头）无人机",
+        "deviceId": "03b16766532244a0971e6c1fcc8de9d4",
+        "model": "Matrice 4TD",
+        "online": "0",
+        "cameraIndex": "99-0-0"
+      },
+      "available": true,
+      "longitude": 118.190339,
+      "latitude": 24.625786
+    },
+    {
+      "dockCode": "8UUXN4S00A06WF",
+      "dockName": "同安大桥（滨海西）机场",
+      "dockId": "68f041f43fde4e2896a084bec561acca",
+      "model": "Dock 3",
+      "online": "0",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市同安区",
+      "aircraft": {
+        "deviceCode": "1581F8HGX256B00A0J7P",
+        "deviceName": "同安大桥（滨海西）无人机",
+        "deviceId": "01bd80d309a54e3fa01332ccddef33e7",
+        "model": "Matrice 4TD",
+        "online": "0",
+        "cameraIndex": "99-0-0"
+      },
+      "available": false,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "8UUXNBN00A0TWN",
+      "dockName": "同安官浔地铁站机场",
+      "dockId": "50c5fbc76dc644299fdcb4e40b14259b",
+      "model": "Dock 3",
+      "online": "0",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市同安区",
+      "aircraft": {
+        "deviceCode": "1581F8HGX25BR00A1539",
+        "deviceName": "同安官浔地铁站无人机",
+        "deviceId": "222b77d66abf420db9ab056c56b6ae10",
+        "model": "Matrice 4TD",
+        "online": "0",
+        "cameraIndex": "99-0-0"
+      },
+      "available": false,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "8UUDMCR00A2JD0",
+      "dockName": "厦门北站机场3",
+      "dockId": "afd94ea98f55473a8b745ca26eb01df5",
+      "model": "Dock 3",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市集美区",
+      "aircraft": {
+        "deviceCode": "1581F8HGD25190010196",
+        "deviceName": "厦门北站机场无人机",
+        "deviceId": "13c6501759c949f8bad5228ca28d1aee",
+        "model": "Matrice 4TD",
+        "online": "0",
+        "cameraIndex": "99-0-0"
+      },
+      "available": true,
+      "longitude": 118.073909,
+      "latitude": 24.636977
+    },
+    {
+      "dockCode": "8UUXN2T00A01T3",
+      "dockName": "软三A06 机场试用",
+      "dockId": "684d7545730f4038900dd42101e838c5",
+      "model": "机场3",
+      "online": "0",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市集美区",
+      "aircraft": null,
+      "available": false,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "8UUXN3K00A037V",
+      "dockName": "软三A01机场",
+      "dockId": "8e8537929606486fadc7be0b79e65ee3",
+      "model": "Dock 3",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市集美区",
+      "aircraft": {
+        "deviceCode": "1581F8HH3261U00AA0EH",
+        "deviceName": "软三A01无人机",
+        "deviceId": "c372e7af65de4e6bae635b7e6243d48d",
+        "model": "Matrice 4D",
+        "online": "0",
+        "cameraIndex": "98-0-0"
+      },
+      "available": true,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "8UUXN6A00A0ALQ",
+      "dockName": "软三F06机场",
+      "dockId": "accdc56f4e5e438085510e673eaf4484",
+      "model": "Dock 3",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市集美区",
+      "aircraft": {
+        "deviceCode": "1581F8HHX253L00A00V0",
+        "deviceName": "软三F06无人机",
+        "deviceId": "44581df622164995bb347bc2798cb258",
+        "model": "Matrice 4D",
+        "online": "0",
+        "cameraIndex": "98-0-0"
+      },
+      "available": true,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "8UUXNBN00A0TXP",
+      "dockName": "车载机场",
+      "dockId": "bd091c75bf2a436082b3d46f177b38b5",
+      "model": "Dock 3",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市集美区",
+      "aircraft": {
+        "deviceCode": "1581F8HGX25BR00A14ST",
+        "deviceName": "软三车载无人机",
+        "deviceId": "0dfad218e44c40f3a57e74e7fdfddc7e",
+        "model": "Matrice 4TD",
+        "online": "0",
+        "cameraIndex": "99-0-0"
+      },
+      "available": true,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "7CTXMA900B033G",
+      "dockName": "厦金大桥A2标机场",
+      "dockId": "c9bec589818b4552ae6fd2ea4fc842e1",
+      "model": "机场2",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市思明区",
+      "aircraft": {
+        "deviceCode": "1581F6Q8D241U00BNNX2",
+        "deviceName": "厦金大桥A2标无人机",
+        "deviceId": "5cab736363914d7d866e3c49608ec38d",
+        "model": "Matrice 3TD",
+        "online": "0",
+        "cameraIndex": "81-0-0"
+      },
+      "available": true,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "8UUXN2T00A01TF",
+      "dockName": "厦金大桥A1标机场",
+      "dockId": "64f92c892d5c41b59bafd43ca4c5b4a6",
+      "model": "Dock 3",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市思明区",
+      "aircraft": {
+        "deviceCode": "1581F8HGD25110010056",
+        "deviceName": "厦金大桥A1标无人机",
+        "deviceId": "1f733fb7dba945d980ed76fd722598f6",
+        "model": "Matrice 4TD",
+        "online": "0",
+        "cameraIndex": "99-0-0"
+      },
+      "available": true,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "7CTDM4T00B8R96",
+      "dockName": "海沧东孚机场",
+      "dockId": "ea1467125e154162894bf0bbeb025fd7",
+      "model": "Dock 2",
+      "online": "0",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市海沧区",
+      "aircraft": {
+        "deviceCode": "1581F6Q8X254G00G0835",
+        "deviceName": "东孚车辆段无人机",
+        "deviceId": "1e22030b90e04ba982e20a262ee508a1",
+        "model": "Matrice 3TD",
+        "online": "0",
+        "cameraIndex": "81-0-0"
+      },
+      "available": false,
+      "longitude": 117.931971,
+      "latitude": 24.556086
+    },
+    {
+      "dockCode": "8UUXN5M00A08WP",
+      "dockName": "公路中心凤山站机场",
+      "dockId": "14cd5fdb9a374da1b7ed23b9da0e23f8",
+      "model": "Dock 3",
+      "online": "1",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市海沧区",
+      "aircraft": {
+        "deviceCode": "1581F8HGX253E00A04DX",
+        "deviceName": "公路中心凤山站无人机",
+        "deviceId": "78b2b2f276f64e05abd0db19e86f8e94",
+        "model": "Matrice 4TD",
+        "online": "1",
+        "cameraIndex": "99-0-0"
+      },
+      "available": false,
+      "longitude": null,
+      "latitude": null
+    },
+    {
+      "dockCode": "7CTDL9K00A0148",
+      "dockName": "翔安欧厝机场",
+      "dockId": "f6a3cae104494c1981f9cb0d6520afef",
+      "model": "",
+      "online": "0",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市翔安区",
+      "aircraft": {
+        "deviceCode": "1581F6Q8D23CM00A29TU",
+        "deviceName": "两集市一广场无人机3",
+        "deviceId": "42feac5f49594a5cb6748caec47dad3f",
+        "model": "",
+        "online": "0",
+        "cameraIndex": "81-0-0"
+      },
+      "available": false,
+      "longitude": 118.244574,
+      "latitude": 24.540293
+    },
+    {
+      "dockCode": "7CTDM7D00B7YF7",
+      "dockName": "后村七八堤机场",
+      "dockId": "6c8db32c4b1b464e8d067829c2c25cca",
+      "model": "",
+      "online": "0",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市翔安区",
+      "aircraft": {
+        "deviceCode": "1581F6Q8D246C00G4P5M",
+        "deviceName": "后村七八堤无人机",
+        "deviceId": "910493463be240738a43c9a47432fe40",
+        "model": "",
+        "online": "0",
+        "cameraIndex": "81-0-0"
+      },
+      "available": false,
+      "longitude": 117.928778,
+      "latitude": 24.558187
+    },
+    {
+      "dockCode": "7CTDM7H00B70LV",
+      "dockName": "金海街道机场",
+      "dockId": "a435f7f9d8e84ce5b3927127b34b0bee",
+      "model": "",
+      "online": "0",
+      "cameraIndex": "165-0-7",
+      "zoneName": "厦门市翔安区",
+      "aircraft": {
+        "deviceCode": "1581F6Q8325B100BS13C",
+        "deviceName": "金海街道无人机",
+        "deviceId": "578683825043401a8c8c92e7278a3630",
+        "model": "",
+        "online": "0",
+        "cameraIndex": "81-0-0"
+      },
+      "available": false,
+      "longitude": null,
+      "latitude": null
+    }
+  ],
+  "lastRefreshed": 1777517766120
+}

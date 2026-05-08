@@ -1,0 +1,3 @@
+# 缓存文件（包含敏感信息，不提交到仓库）
+.token_cache.json
+.credentials_cache.json

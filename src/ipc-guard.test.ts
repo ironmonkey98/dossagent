@@ -10,14 +10,20 @@ describe('classifyAction', () => {
   });
 
   it('should classify register_group as safe', () => {
-    const action: IpcAction = { type: 'register_group', payload: { jid: 'test@g.us' } };
+    const action: IpcAction = {
+      type: 'register_group',
+      payload: { jid: 'test@g.us' },
+    };
     const result = classifyAction(action);
     expect(result.riskLevel).toBe('safe');
     expect(result.verdict).toBe('pass');
   });
 
   it('should classify schedule_task as risky', () => {
-    const action: IpcAction = { type: 'schedule_task', payload: { prompt: 'check status' } };
+    const action: IpcAction = {
+      type: 'schedule_task',
+      payload: { prompt: 'check status' },
+    };
     const result = classifyAction(action);
     expect(result.riskLevel).toBe('risky');
     expect(result.verdict).toBe('pass');
@@ -48,20 +54,29 @@ describe('classifyAction', () => {
   });
 
   it('should classify ask_user as safe', () => {
-    const action: IpcAction = { type: 'ask_user', payload: { question: 'continue?' } };
+    const action: IpcAction = {
+      type: 'ask_user',
+      payload: { question: 'continue?' },
+    };
     const result = classifyAction(action);
     expect(result.riskLevel).toBe('safe');
     expect(result.verdict).toBe('pass');
   });
 
   it('should classify delete_task as risky', () => {
-    const action: IpcAction = { type: 'delete_task', payload: { taskId: 'task-123' } };
+    const action: IpcAction = {
+      type: 'delete_task',
+      payload: { taskId: 'task-123' },
+    };
     const result = classifyAction(action);
     expect(result.riskLevel).toBe('risky');
   });
 
   it('should allow normal-sized payloads', () => {
-    const action: IpcAction = { type: 'message', payload: { text: '无人机已安全返航' } };
+    const action: IpcAction = {
+      type: 'message',
+      payload: { text: '无人机已安全返航' },
+    };
     const result = classifyAction(action);
     expect(result.verdict).toBe('pass');
   });

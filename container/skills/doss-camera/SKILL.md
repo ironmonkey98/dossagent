@@ -1,143 +1,91 @@
 ---
 name: doss-camera
 description: |
-  控制 DOSS 无人机摄像头与负载设备，包括拍照、录像、变焦、切换相机模式、
-  看向目标点、探照灯控制、喊话器 TTS 播报。
-  当用户说"拍照"、"拍张照"、"开始录像"、"停止录像"、"变焦"、"变焦到XX倍"、
-  "看向目标"、"开探照灯"、"关探照灯"、"喊话"、"广播"、"TTS播报"、
-  "切换红外"、"切换相机模式"、"doss摄像头"、"负载控制"时触发此 Skill。
-  依赖 doss-auth 提供的 Token（~/.claude/doss_session.json）。
-  需要知道机场编号（dockCode）。
+  控制 DOSS 无人机摄像头与负载设备：拍照、录像、变焦、切换模式、探照灯、喊话器。
+  当用户说"拍照"、"录像"、"变焦"、"探照灯"、"喊话"、"切换红外"、
+  "doss摄像头"、"负载控制"、"看直播"、"视频流"、"云台"时触发此 Skill。
+  通过 uav-agent 的 NLP 解析 + 飞控执行（POST /api/parse → /api/execute）。
+  依赖 doss-auth 提供的 Token。
 ---
 
 # DOSS 摄像头与负载控制 Skill
 
 ## 概述
 
-通过命令控制 DOSS 无人机的摄像头（拍照/录像/变焦/模式）、探照灯、喊话器等负载设备。
+通过 uav-agent 的 NLP 解析接口控制无人机摄像头、探照灯、喊话器等负载。与飞控使用相同接口。
 
-## 自然语言 → 命令映射
+## 自然语言 → API 映射
 
-| 用户说 | 执行 |
-|--------|------|
-| 拍张照片 | `photo --dock <code> --payload 0` |
-| 开始/停止录像 | `record --dock <code> --payload 0 --action start/stop` |
-| 变焦到20倍 | `zoom --dock <code> --payload 0 --factor 20` |
-| 切换到录像/红外模式 | `mode --dock <code> --payload 0 --mode 1/2` |
-| 看向经纬度XX,XX | `lookat --dock <code> --payload 0 --lon ... --lat ...` |
-| 开探照灯/常亮 | `light --dock <code> --payload 2 --mode 1` |
-| 关探照灯 | `light --dock <code> --payload 2 --mode 0` |
-| 喊话：请注意安全 | `speaker --dock <code> --payload 3 --text "请注意安全"` |
-| 停止喊话 | `speaker --dock <code> --payload 3 --stop` |
-| 看视频/抓图传/看直播 | `stream --device <droneDeviceCode> --protocol HLS` |
-
-> 负载索引：0=主摄像头，1=副摄像头，2=探照灯，3=喊话器（具体以设备为准）
-
-## 命令详解
-
-### 拍照（photo）
+### 第一步：NLP 解析
 
 ```bash
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py photo \
-  --dock DOCK001 --payload 0
+curl -s -X POST http://localhost:3000/api/parse \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"message": "F06拍张照片"}'
 ```
 
-### 录像（record）
+### 第二步：执行
 
 ```bash
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py record \
-  --dock DOCK001 --payload 0 --action start   # 开始
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py record \
-  --dock DOCK001 --payload 0 --action stop    # 停止
+curl -s -X POST http://localhost:3000/api/execute \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"dockCode": "F06XXXX", "actions": [{"cmd": "cameraPhotoTake"}]}'
 ```
 
-### 变焦（zoom）
+## 常用自然语言示例
 
-变焦范围 2-200 倍，支持 zoom/wide/ir 三种镜头类型。
+| 用户说 | message 参数 |
+|--------|-------------|
+| 拍张照片 | `"拍张照片"` |
+| 开始录像 | `"开始录像"` |
+| 停止录像 | `"停止录像"` |
+| 看向经度117.94纬度24.55 | `"看向经度117.94纬度24.55"` |
+| 开探照灯 | `"开探照灯"` |
+| 喊话：请注意安全 | `"喊话：请注意安全"` |
+| 切换到红外模式 | `"切换到红外模式"` |
+| 云台复位 | `"云台复位"` |
+
+## 支持的负载指令（cmd）
+
+| cmd | 说明 | 关键参数 |
+|-----|------|---------|
+| `cameraPhotoTake` | 拍照 | — |
+| `cameraRecordingStart` | 开始录像 | — |
+| `cameraRecordingStop` | 停止录像 | — |
+| `cameraLookAt` | 云台对准目标 | longitude, latitude, height |
+| `cameraModeSwitch` | 相机模式切换 | cameraMode (0=拍照 1=录像 2=低光 3=全景) |
+| `gimbalReset` | 云台复位 | resetMode |
+| `cameraScreenDrag` | 云台拖拽 | screenX, screenY |
+| `lightModeSet` | 探照灯模式 | lightMode (0=关 1=常亮 2=爆闪) |
+| `lightBrightnessSet` | 探照灯亮度 | brightness (1-100) |
+| `speakerTtsPlayStart` | TTS 播报 | text, voiceType |
+
+> 负载索引（payloadIndex）由系统自动从驾驶舱数据获取，无需手动指定。
+
+## 安全提示
+
+- 抢夺负载控制权 (`payloadAuthorityGrab`) 会中断其他用户操作，需用户确认
+- TTS 播报音量受设备限制，长文本会分段播报
+
+## 常见错误处理
+
+| 错误信息 | 原因 | 解决方案 |
+|---------|------|---------|
+| `设备离线` | 机场或无人机未连接 | 先用 doss-status 确认设备状态 |
+| `Token已失效` | Token 过期 | 重新运行 doss-auth |
+| `控制权被占用` | 其他用户正在操作 | 确认后使用抢夺控制权 |
+| `负载不可用` | 设备不支持该负载 | 确认设备型号支持的负载类型 |
+
+## 视频流获取
+
+获取实时视频流需使用 DOSS 平台 API 直接调用（uav-agent 暂未封装）：
 
 ```bash
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py zoom \
-  --dock DOCK001 --payload 0 --factor 20 --camera-type zoom
+# 获取视频流地址（需要无人机的 deviceCode）
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://doss.xmrbi.com/xmrbi-onecas/uav/cockpit/${DOCK_CODE}/liveStreamSnapshot"
 ```
 
-### 切换相机模式（mode）
-
-```bash
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py mode \
-  --dock DOCK001 --payload 0 --mode 0  # 0=拍照 1=录像 2=智能低光 3=全景拍照
-```
-
-### 看向目标（lookat）
-
-```bash
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py lookat \
-  --dock DOCK001 --payload 0 --lon 117.94 --lat 24.55 --height 0
-```
-
-### 探照灯（light）
-
-```bash
-# 开启常亮，亮度80%
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py light \
-  --dock DOCK001 --payload 2 --mode 1 --brightness 80
-# 关闭
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py light \
-  --dock DOCK001 --payload 2 --mode 0
-```
-
-探照灯模式：0=关闭，1=常亮，2=爆闪；亮度范围 1-100。
-
-### 喊话器（speaker）
-
-```bash
-# TTS 播报
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py speaker \
-  --dock DOCK001 --payload 3 --text "前方施工，请绕行" --volume 80
-# 停止播放
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py speaker \
-  --dock DOCK001 --payload 3 --stop
-```
-
-### 抢夺负载控制权 ⚠️（payload）
-
-> 会中断其他用户的摄像头操作，需 `--confirm` 确认
-
-```bash
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py payload \
-  --dock DOCK001 --confirm
-```
-
-### 实时视频流（stream）
-
-> 需要无人机的 **deviceCode**（非 dockCode），从 `doss-status` 输出中获取
-
-```bash
-# HLS 流（浏览器可直接播放，推荐）
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py stream \
-  --device 1581F8HHX252N00A00DM --protocol HLS
-
-# RTSP 流（VLC 播放）
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py stream \
-  --device 1581F8HHX252N00A00DM --protocol RTSP
-
-# 辅码流（低码率）
-python3 ~/.claude/skills/doss-camera/scripts/doss_camera.py stream \
-  --device 1581F8HHX252N00A00DM --protocol HLS --stream-type 2
-```
-
-输出示例：
-```
-✅ 视频流获取成功
-   协议：HLS
-   地址：http://172.16.180.18/hls/gb_play_xxx.m3u8
-   💡 可在浏览器或播放器中打开该地址
-```
-
-## 获取机场/无人机编号
-
-```bash
-# 获取机场 dockCode
-python3 ~/.claude/skills/doss-status/scripts/doss_status.py --type dock
-# 获取无人机 deviceCode（stream 命令需要此值）
-python3 ~/.claude/skills/doss-status/scripts/doss_status.py --type drone
-```
+或通过 doss-monitor skill 的视频流接口。

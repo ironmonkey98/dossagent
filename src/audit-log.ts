@@ -34,10 +34,22 @@ export function queryAuditLogs(
   const clauses: string[] = [];
   const params: unknown[] = [];
 
-  if (filter.sourceGroup) { clauses.push('source_group = ?'); params.push(filter.sourceGroup); }
-  if (filter.action) { clauses.push('action = ?'); params.push(filter.action); }
-  if (filter.riskLevel) { clauses.push('risk_level = ?'); params.push(filter.riskLevel); }
-  if (filter.verdict) { clauses.push('verdict = ?'); params.push(filter.verdict); }
+  if (filter.sourceGroup) {
+    clauses.push('source_group = ?');
+    params.push(filter.sourceGroup);
+  }
+  if (filter.action) {
+    clauses.push('action = ?');
+    params.push(filter.action);
+  }
+  if (filter.riskLevel) {
+    clauses.push('risk_level = ?');
+    params.push(filter.riskLevel);
+  }
+  if (filter.verdict) {
+    clauses.push('verdict = ?');
+    params.push(filter.verdict);
+  }
 
   const where = clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '';
   const limit = filter.limit ?? 100;

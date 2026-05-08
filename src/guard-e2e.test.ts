@@ -20,8 +20,7 @@ describe('Guard Pipeline E2E', () => {
     expect(cleanInput).toBe('飞到软件园三期F06');
 
     // 模拟 agent 输出包含 API key（20+ 字符以触发规则）
-    const agentOutput =
-      '任务完成。api_key=sk-abc123def456ghi789xyz0 用于验证';
+    const agentOutput = '任务完成。api_key=sk-abc123def456ghi789xyz0 用于验证';
     const secrets = scanForSecrets(agentOutput);
     expect(secrets.hasSecrets).toBe(true);
 

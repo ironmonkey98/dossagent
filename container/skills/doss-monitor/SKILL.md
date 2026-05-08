@@ -4,7 +4,8 @@ description: |
   实时监控 DOSS 无人机遥测数据、查询告警事件、获取视频流地址、查询历史轨迹。
   当用户说"监控无人机"、"实时状态"、"开始监控"、"查看告警"、"最近告警"、
   "未处理告警"、"获取视频流"、"直播流"、"HLS流"、"历史轨迹"、
-  "飞行轨迹"、"doss监控"、"遥测数据"时触发此 Skill。
+  "飞行轨迹"、"doss监控"、"遥测数据"、"监控XX秒"、"在哪飞"、
+  "飞了多远"、"风速多大"、"电量还剩多少"时触发此 Skill。
   依赖 doss-auth 提供的 Token（~/.claude/doss_session.json）。
 ---
 
@@ -37,14 +38,16 @@ description: |
 pip install websocket-client
 ```
 
-```bash
-# 持续监控直到 Ctrl+C
-python3 ~/.claude/skills/doss-monitor/scripts/doss_monitor.py watch \
-  --device DRONE001
+> **建议**：始终设置 `--duration` 参数避免进程无限挂起。推荐 30-120 秒。
 
-# 监控60秒后自动退出
+```bash
+# 监控60秒后自动退出（推荐）
 python3 ~/.claude/skills/doss-monitor/scripts/doss_monitor.py watch \
   --device DRONE001 --duration 60
+
+# 持续监控直到 Ctrl+C（不设 duration 时注意手动退出）
+python3 ~/.claude/skills/doss-monitor/scripts/doss_monitor.py watch \
+  --device DRONE001
 ```
 
 输出示例：
@@ -103,6 +106,18 @@ python3 ~/.claude/skills/doss-monitor/scripts/doss_monitor.py history \
 ```
 
 坐标系选项：`wgs-84`（默认）、`gcj-02`（国测局）、`bd-09`（百度）
+
+## 常见错误处理
+
+| 错误信息 | 原因 | 解决方案 |
+|---------|------|---------|
+| `WebSocket 连接失败` | 设备不在线或网络问题 | 先用 doss-status 确认设备在线 |
+| `Token 过期` | 超过 24 小时有效期 | 重新运行 doss-auth 登录 |
+| `设备无遥测数据` | 无人机未起飞或信号丢失 | 确认飞行状态，检查信号 |
+| `告警列表为空` | 无告警事件 | 正常情况 |
+| `视频流获取失败` | 设备离线或协议不支持 | 确认设备在线，尝试切换协议 |
+| `轨迹查询超范围` | 时间跨度超过 1 小时 | 缩小时间范围至 1 小时内 |
+| `缺少 websocket-client` | Python 库未安装 | `pip install websocket-client` |
 
 ## 典型监控流程
 

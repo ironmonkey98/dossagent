@@ -1,94 +1,163 @@
 ---
 name: slack-formatting
-description: Format messages for Slack using mrkdwn syntax. Use when responding to Slack channels (folder starts with "slack_" or JID contains slack identifiers).
+description: |
+  使用 Slack mrkdwn 语法格式化消息。当响应到 Slack 频道（文件夹以 "slack_" 开头
+  或 JID 包含 slack 标识）时，或用户说"格式化消息"、"发送到 Slack"、"Slack 格式"、
+  "mrkdwn"、"Slack 消息格式"、"怎么在 Slack 里显示"、"Slack 排版"、
+  "发 Slack 消息"、"Slack 通知"时触发此 Skill。
 ---
 
-# Slack Message Formatting (mrkdwn)
+# Slack 消息格式化 (mrkdwn)
 
-When responding to Slack channels, use Slack's mrkdwn syntax instead of standard Markdown.
+当响应到 Slack 频道时，使用 Slack 的 mrkdwn 语法替代标准 Markdown。
 
-## How to detect Slack context
+## 如何检测 Slack 上下文
 
-Check your group folder name or workspace path:
-- Folder starts with `slack_` (e.g., `slack_engineering`, `slack_general`)
-- Or check `/workspace/group/` path for `slack_` prefix
+检查群组文件夹名或工作区路径：
+- 文件夹以 `slack_` 开头（如 `slack_engineering`、`slack_general`）
+- 或检查 `/workspace/group/` 路径是否包含 `slack_` 前缀
 
-## Formatting reference
+## 格式化参考
 
-### Text styles
+### 文本样式
 
-| Style | Syntax | Example |
-|-------|--------|---------|
-| Bold | `*text*` | *bold text* |
-| Italic | `_text_` | _italic text_ |
-| Strikethrough | `~text~` | ~strikethrough~ |
-| Code (inline) | `` `code` `` | `inline code` |
-| Code block | ` ```code``` ` | Multi-line code |
+| 样式 | 语法 | 示例 | Markdown 等价（不要用） |
+|------|------|------|----------------------|
+| 粗体 | `*text*` | *粗体文本* | ~~`**text**`~~ |
+| 斜体 | `_text_` | _斜体文本_ | — |
+| 删除线 | `~text~` | ~删除线~ | — |
+| 行内代码 | `` `code` `` | `行内代码` | — |
+| 代码块 | ` ```code``` ` | 多行代码 | — |
 
-### Links and mentions
+### 链接和提及
 
 ```
-<https://example.com|Link text>     # Named link
-<https://example.com>                # Auto-linked URL
-<@U1234567890>                       # Mention user by ID
-<#C1234567890>                       # Mention channel by ID
+<https://example.com|链接文本>     # 命名链接
+<https://example.com>                # 自动链接 URL
+<@U1234567890>                       # 提及用户（按 ID）
+<#C1234567890>                       # 提及频道（按 ID）
 <!here>                              # @here
 <!channel>                           # @channel
 ```
 
-### Lists
+### 列表
 
-Slack supports simple bullet lists but NOT numbered lists:
-
-```
-• First item
-• Second item
-• Third item
-```
-
-Use `•` (bullet character) or `- ` or `* ` for bullets.
-
-### Block quotes
+Slack 支持简单无序列表，**不支持**有序列表：
 
 ```
-> This is a block quote
-> It can span multiple lines
+• 第一项
+• 第二项
+• 第三项
+```
+
+使用 `•`（项目符号字符）或 `- ` 或 `* ` 作为列表标记。
+
+需要编号时：`• 1. 第一项`、`• 2. 第二项`
+
+### 引用块
+
+```
+> 这是引用块
+> 可以跨多行
 ```
 
 ### Emoji
 
-Use standard emoji shortcodes: `:white_check_mark:`, `:x:`, `:rocket:`, `:tada:`
+使用标准 emoji 短码：`:white_check_mark:`、`:x:`、`:rocket:`、`:tada:`、`:warning:`
 
-## What NOT to use
+## 禁止使用的语法
 
-- **NO** `##` headings (use `*Bold text*` for headers instead)
-- **NO** `**double asterisks**` for bold (use `*single asterisks*`)
-- **NO** `[text](url)` links (use `<url|text>` instead)
-- **NO** `1.` numbered lists (use bullets with numbers: `• 1. First`)
-- **NO** tables (use code blocks or plain text alignment)
-- **NO** `---` horizontal rules
+以下标准 Markdown 语法在 Slack 中**不生效**或**显示异常**，必须替换：
 
-## Example message
+| 不要用 | 原因 | 替代方案 |
+|--------|------|---------|
+| `## 标题` | Slack 不支持标题语法 | 用 `*粗体文本*` 作为标题 |
+| `**粗体**` | 双星号不渲染粗体 | 用 `*单星号*` |
+| `[文本](URL)` | 方括号链接不渲染 | 用 `<URL\|文本>` |
+| `1. 有序列表` | Slack 不支持有序列表 | 用 `• 1. 第一项` |
+| `表格` | Slack 不支持表格 | 用代码块或文本对齐 |
+| `---` | 水平线不渲染 | 用空行分隔 |
+| `![图片](URL)` | 图片语法不渲染 | 直接粘贴 URL 或用 `<URL\|图片>` |
 
+## Before → After 对比示例
+
+### 示例 1：标题和列表
+
+**错误（标准 Markdown）：**
+```markdown
+## 每日站会摘要
+
+**已完成：** 修复了登录流程的认证 bug
+**进行中：** 构建新的仪表盘组件
+**阻塞：** 等待 DevOps 的 API 权限
+
+---
+下次同步：周一上午10点
 ```
-*Daily Standup Summary*
 
-_March 21, 2026_
+**正确（mrkdwn）：**
+```
+*每日站会摘要*
 
-• *Completed:* Fixed authentication bug in login flow
-• *In Progress:* Building new dashboard widgets
-• *Blocked:* Waiting on API access from DevOps
+• *已完成：* 修复了登录流程的认证 bug
+• *进行中：* 构建新的仪表盘组件
+• *阻塞：* 等待 DevOps 的 API 权限
 
-> Next sync: Monday 10am
-
-:white_check_mark: All tests passing | <https://ci.example.com/builds/123|View Build>
+> 下次同步：周一上午10点
 ```
 
-## Quick rules
+### 示例 2：链接和状态
 
-1. Use `*bold*` not `**bold**`
-2. Use `<url|text>` not `[text](url)`
-3. Use `•` bullets, avoid numbered lists
-4. Use `:emoji:` shortcodes
-5. Quote blocks with `>`
-6. Skip headings — use bold text instead
+**错误：**
+```markdown
+### 部署状态
+- [API 服务](https://api.example.com) ✅ 正常
+- [前端](https://web.example.com) ❌ 502 错误
+```
+
+**正确：**
+```
+*部署状态*
+
+• <https://api.example.com|API 服务> :white_check_mark: 正常
+• <https://web.example.com|前端> :x: 502 错误
+```
+
+### 示例 3：表格替代
+
+**错误：**
+```markdown
+| 服务 | 状态 | 延迟 |
+|------|------|------|
+| API  | ✅   | 12ms |
+| DB   | ⚠️   | 450ms |
+```
+
+**正确：**
+```
+*服务状态*
+• API — :white_check_mark: 正常（12ms）
+• DB — :warning: 慢查询（450ms）
+```
+
+## 快速检查清单
+
+发送到 Slack 前，逐一确认：
+
+1. 粗体用 `*单星号*` 而非 `**双星号**`
+2. 链接用 `<URL|文本>` 而非 `[文本](URL)`
+3. 列表用 `•` 项目符号，避免有序列表
+4. 使用 `:emoji:` 短码而非 Unicode emoji
+5. 引用用 `>` 前缀
+6. 跳过 `##` 标题——用粗体替代
+7. 表格转为列表或代码块
+
+## 常见问题处理
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| 粗体不显示 | 用了双星号 | 改为 `*单星号*` |
+| 链接显示为原始文本 | 用了 Markdown 链接语法 | 改为 `<URL\|文本>` |
+| 列表没有缩进 | Slack 列表缩进支持有限 | 保持单层列表 |
+| Emoji 显示为文本 | 用了 Unicode emoji | 改为 `:shortcode:` 格式 |
+| 代码块不换行 | 缺少语言标识 | 确保 ``` 独占一行 |

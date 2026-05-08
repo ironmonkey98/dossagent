@@ -41,8 +41,18 @@ describe('writeAuditLog', () => {
   });
 
   it('should query by verdict', () => {
-    writeAuditLog(db, { sourceGroup: 'main', action: 'ipc_message', riskLevel: 'safe', verdict: 'pass' });
-    writeAuditLog(db, { sourceGroup: 'api', action: 'ipc_task', riskLevel: 'risky', verdict: 'blocked' });
+    writeAuditLog(db, {
+      sourceGroup: 'main',
+      action: 'ipc_message',
+      riskLevel: 'safe',
+      verdict: 'pass',
+    });
+    writeAuditLog(db, {
+      sourceGroup: 'api',
+      action: 'ipc_task',
+      riskLevel: 'risky',
+      verdict: 'blocked',
+    });
     const blocked = queryAuditLogs(db, { verdict: 'blocked' });
     expect(blocked).toHaveLength(1);
     expect(blocked[0].source_group).toBe('api');
@@ -50,7 +60,12 @@ describe('writeAuditLog', () => {
 
   it('should respect limit parameter', () => {
     for (let i = 0; i < 10; i++) {
-      writeAuditLog(db, { sourceGroup: 'main', action: 'test', riskLevel: 'safe', verdict: 'pass' });
+      writeAuditLog(db, {
+        sourceGroup: 'main',
+        action: 'test',
+        riskLevel: 'safe',
+        verdict: 'pass',
+      });
     }
     const limited = queryAuditLogs(db, { limit: 3 });
     expect(limited).toHaveLength(3);

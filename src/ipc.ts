@@ -100,7 +100,12 @@ export function startIpcWatcher(deps: IpcDeps): void {
               }
               if (guardResult.riskLevel !== 'safe') {
                 logger.info(
-                  { sourceGroup, type: data.type, riskLevel: guardResult.riskLevel, detail: guardResult.detail },
+                  {
+                    sourceGroup,
+                    type: data.type,
+                    riskLevel: guardResult.riskLevel,
+                    detail: guardResult.detail,
+                  },
                   'IPC action passed with elevated risk',
                 );
                 deps.writeAuditLog({
@@ -208,7 +213,12 @@ export function startIpcWatcher(deps: IpcDeps): void {
               }
               if (guardResult.riskLevel !== 'safe') {
                 logger.info(
-                  { sourceGroup, type: data.type, riskLevel: guardResult.riskLevel, detail: guardResult.detail },
+                  {
+                    sourceGroup,
+                    type: data.type,
+                    riskLevel: guardResult.riskLevel,
+                    detail: guardResult.detail,
+                  },
                   'IPC task action passed with elevated risk',
                 );
                 deps.writeAuditLog({
